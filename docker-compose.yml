@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      - "POSTGRES_DB=${POSTGRES_DB}"
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - "${POSTGRES_DATA}:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD", "curl", "-kf", "https://localhost:5432"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  mlflow:
+    depends_on:
+      - "postgres"
+    build:
+      context: ./
+      dockerfile: ./mlflow/Dockerfile
+    image: mlflow-tracking-server:0.1
+    environment:
+      - "MLFLOW_SERVER_PORT=${MLFLOW_SERVER_PORT}"
+      - "MLFLOW_ARTIFACT_ROOT=${MLFLOW_ARTIFACT_ROOT}"
+      - "POSTGRES_DB=${POSTGRES_DB}"
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "POSTGRES_SERVICE_NAME=${POSTGRES_SERVICE_NAME}"
+    ports:
+      - "${MLFLOW_SERVER_PORT}:${MLFLOW_SERVER_PORT}"
+    working_dir: /workspace
+    volumes:
+      - $PWD/:/workspace/
+    command: sh -c "cd /workspace/ && ./run_mlflow_server.sh"
