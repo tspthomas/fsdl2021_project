@@ -1,0 +1,49 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      - "POSTGRES_DB=${POSTGRES_DB}"
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+    healthcheck:
+      test: ["CMD", "curl", "-kf", "https://localhost:5432"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  airflow:
+    depends_on:
+      - "postgres"
+    build:
+      context: ./
+      dockerfile: ./airflow/Dockerfile
+    image: airflow-server:0.1
+    restart: always
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+      - "AIRFLOW_PORT=${AIRFLOW_PORT}"
+      - "MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}"
+    ports:
+      - "${AIRFLOW_PORT}:${AIRFLOW_PORT}"
+    volumes:
+      - ./src/dags:/usr/local/airflow/dags
+      - ./data:/workspace/data
+    command: webserver
+
+  mlflow:
+    build:
+      context: ./
+      dockerfile: ./mlflow/Dockerfile
+    image: mlflow-tracking-server:0.1
+    environment:
+      - "MLFLOW_SERVER_PORT=${MLFLOW_SERVER_PORT}"
+      - "MLFLOW_ARTIFACT_ROOT=${MLFLOW_ARTIFACT_ROOT}"
+    ports:
+      - "${MLFLOW_SERVER_PORT}:${MLFLOW_SERVER_PORT}"
+    working_dir: /workspace
+    volumes:
+      - $PWD/:/workspace/
+    command: sh -c "cd /workspace/ && ./run_mlflow_server.sh"
