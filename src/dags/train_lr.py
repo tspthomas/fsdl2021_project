@@ -78,16 +78,17 @@ def train_model(**context):
     with open(y_train_path, 'rb') as f:
         y_train = np.load(f)
 
-    with mlflow.start_run():    
-        alpha = 0.5
-        l1_ratio = 0.5
-        lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
-        lr.fit(X_train, y_train)
+    mlflow_run = mlflow.start_run()
 
-        mlflow.log_param("alpha", alpha)
-        mlflow.log_param("l1_ratio", l1_ratio)
+    alpha = 0.5
+    l1_ratio = 0.5
+    lr_model = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
+    lr_model.fit(X_train, y_train)
 
-    context['ti'].xcom_push(key='trained_model_lr', value=lr)
+    mlflow.log_param("alpha", alpha)
+    mlflow.log_param("l1_ratio", l1_ratio)
+    
+    return lr_model, mlflow_run
 
 
 def evaluate_model(**context):
@@ -104,9 +105,15 @@ def evaluate_model(**context):
     with open(y_test_path, 'rb') as f:
         y_test = np.load(f)
 
-    lr = context['ti'].xcom_pull(key='trained_model_lr')
+    # loads data from previous step
+    task_instance = context['ti']
+    task_instance_data = task_instance.xcom_pull(task_ids='train_model')
+    lr_model = task_instance_data[0]
+    active_run = task_instance_data[1]
 
-    predicted_qualities = lr.predict(X_test)
+    mlflow.start_run(active_run.info.run_id)
+
+    predicted_qualities = lr_model.predict(X_test)
 
     (rmse, mae, r2) = eval_metrics(y_test, predicted_qualities)
 
@@ -114,9 +121,23 @@ def evaluate_model(**context):
     mlflow.log_metric("r2", r2)
     mlflow.log_metric("mae", mae)
 
+    return lr_model, active_run
 
-def register_model():
-    print("Register Model")
+
+def register_model(**context):
+    # loads data from previous step
+    task_instance = context['ti']
+    task_instance_data = task_instance.xcom_pull(task_ids='train_model')
+    lr_model = task_instance_data[0]
+    active_run = task_instance_data[1]
+
+    mlflow.start_run(active_run.info.run_id)
+    
+    mlflow.sklearn.log_model(
+        sk_model=lr_model,
+        artifact_path='sklearn-model',
+        registered_model_name='sklearn-elastic-net-model'
+    )
 
 
 args = {
@@ -129,7 +150,7 @@ with DAG(
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),
     dagrun_timeout=timedelta(minutes=5),
-    tags=['training', 'shallow_net', 'keras']
+    tags=['training', 'elastic_net', 'scikit_learn']
 ) as dag:
 
 
