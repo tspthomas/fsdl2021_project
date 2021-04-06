@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t airflow_server -f Dockerfile ../
+docker build -t airflow_server_new -f Dockerfile ../

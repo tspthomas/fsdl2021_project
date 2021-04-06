@@ -78,7 +78,7 @@ def train_model(**context):
     with open(y_train_path, 'rb') as f:
         y_train = np.load(f)
 
-    with mlflow.start_run():
+    with mlflow.start_run():    
         alpha = 0.5
         l1_ratio = 0.5
         lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
