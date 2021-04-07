@@ -151,7 +151,7 @@ services:
     working_dir: /workspace
     volumes:
       - $PWD/:/workspace/
-    command: sh -c "cd /workspace/ && ./run_mlflow_server.sh"
+    command: sh -c "cd /workspace/ && ./mlflow/run_mlflow_server.sh"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:${MLFLOW_SERVER_PORT}/"]
       interval: 10s
