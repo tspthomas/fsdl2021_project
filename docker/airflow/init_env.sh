@@ -7,19 +7,19 @@ echo -e "\n${NC}Initializing Airflow environment"
 echo -e "--------------------------------\n"
 
 echo -e "${NC}[Info] Creating required directories"
-if [[ -d ./src/logs ]]
+if [[ -d ./src/pipelines/logs ]]
 then
     echo -e "${YELLOW}[Warning] ./src/logs already exists"
 else
-    mkdir ./src/logs
+    mkdir ./src/pipelines//logs
     echo -e "${NC}[Info] Created directory ./src/logs"
 fi
 
-if [[ -d ./src/plugins ]]
+if [[ -d ./src/pipelines//plugins ]]
 then
     echo -e "${YELLOW}[Warning] ./src/plugins already exists"
 else
-    mkdir ./src/plugins
+    mkdir ./src/pipelines//plugins
     echo -e "${NC}[Info] Created directory ./src/plugins"
 fi
 

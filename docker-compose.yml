@@ -41,8 +41,8 @@ x-airflow-common:
   &airflow-common
   build:
     context: ./
-    dockerfile: ./airflow/Dockerfile
-  image: airflow_server:0.1
+    dockerfile: ./docker/airflow/Dockerfile
+  image: airflow-server:0.1
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -56,9 +56,9 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__DAG_DEFAULT_VIEW: 'graph'
     MLFLOW_TRACKING_URI: '${MLFLOW_TRACKING_URI}'
   volumes:
-    - ./src/dags:/opt/airflow/dags
-    - ./src/logs:/opt/airflow/logs
-    - ./src/plugins:/opt/airflow/plugins
+    - ./src/pipelines/dags:/opt/airflow/dags
+    - ./src/pipelines/logs:/opt/airflow/logs
+    - ./src/pipelines/plugins:/opt/airflow/plugins
     - ./data:/workspace/data
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
@@ -140,7 +140,7 @@ services:
   mlflow:
     build:
       context: ./
-      dockerfile: ./mlflow/Dockerfile
+      dockerfile: ./docker/mlflow/Dockerfile
     image: mlflow-tracking-server:0.1
     environment:
       - "MLFLOW_SERVER_PORT=${MLFLOW_SERVER_PORT}"
@@ -151,12 +151,36 @@ services:
     working_dir: /workspace
     volumes:
       - $PWD/:/workspace/
-    command: sh -c "cd /workspace/ && ./mlflow/run_mlflow_server.sh"
+    command: sh -c "cd /workspace/ && ./docker/mlflow/run_mlflow_server.sh"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:${MLFLOW_SERVER_PORT}/"]
       interval: 10s
       timeout: 10s
       retries: 5
+    restart: always
+
+  webapp:
+    build:
+      context: ./
+      dockerfile: ./docker/webapp/Dockerfile
+    image: flask-webapp:0.1
+    environment:
+      MLFLOW_SERVER_PORT: "${MLFLOW_SERVER_PORT}"
+      MLFLOW_TRACKING_URI: "${MLFLOW_TRACKING_URI}"
+    ports:
+      - "${FLASK_PORT}:${FLASK_PORT}"
+    working_dir: /workspace
+    volumes:
+      - $PWD/:/workspace/
+    # depends_on:
+    #   mlflow:
+    #     condition: service_healthy
+    #command: sh -c "cd /workspace/ && ./mlflow/run_mlflow_server.sh"
+    # healthcheck:
+    #   test: ["CMD", "curl", "--fail", "http://localhost:${MLFLOW_SERVER_PORT}/"]
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 5
     restart: always
 
 volumes:

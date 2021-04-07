@@ -4,5 +4,5 @@ RUN apt update -y
 RUN apt upgrade -y
 RUN apt install -y git
 
-COPY mlflow/requirements.txt /tmp/requirements.txt
+COPY docker/webapp/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt

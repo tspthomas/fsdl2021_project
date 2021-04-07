@@ -23,6 +23,8 @@ MLFLOW_TRACKING_URI=http://mlflow:${MLFLOW_SERVER_PORT}
 
 AIRFLOW_PORT=8081
 FLOWER_PORT=5556
+
+FLASK_PORT=8082
 ```
 
 **IMPORTANT:** Do not version this file in git.
@@ -31,7 +33,7 @@ FLOWER_PORT=5556
 
 Simply run the following command in the root directory of this repository
 ```
-./airflow/init_env.sh
+./docker/airflow/init_env.sh
 ```
 
 Check the environment variables `AIRFLOW_UID` and `AIRFLOW_GID` were created in the `.env` file. Also, double-check the directories `src/logs` and `src/plugins` were created.
