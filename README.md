@@ -56,7 +56,10 @@ docker-compose down
 ```
 
 ### Accessing Airflow UI
-You should be able to open AIrflow UI in `http://<host_ip>:8080` (or the port you specified in `AIRFLOW_PORT`).
+You should be able to open Airflow UI in `http://<host_ip>:8081` (or the port you specified in `AIRFLOW_PORT`).
 
 ### Accessing MLFlow UI
 You should be able to open MLFlow UI in `http://<host_ip>:5033` (or the port you specified in `MLFLOW_SERVER_PORT`).
+
+### Accessing Web App UI
+You should be able to open Web App UI in `http://<host_ip>:8082` (or the port you specified in `FLASK_PORT`).

@@ -167,20 +167,13 @@ services:
     environment:
       MLFLOW_SERVER_PORT: "${MLFLOW_SERVER_PORT}"
       MLFLOW_TRACKING_URI: "${MLFLOW_TRACKING_URI}"
+      FLASK_PORT: "${FLASK_PORT}"
     ports:
       - "${FLASK_PORT}:${FLASK_PORT}"
     working_dir: /workspace
     volumes:
-      - $PWD/:/workspace/
-    # depends_on:
-    #   mlflow:
-    #     condition: service_healthy
-    #command: sh -c "cd /workspace/ && ./mlflow/run_mlflow_server.sh"
-    # healthcheck:
-    #   test: ["CMD", "curl", "--fail", "http://localhost:${MLFLOW_SERVER_PORT}/"]
-    #   interval: 10s
-    #   timeout: 10s
-    #   retries: 5
+      - $PWD/src/webapp/:/workspace/
+    command: sh -c "cd /workspace/ && ./run_debug.sh"
     restart: always
 
 volumes:
