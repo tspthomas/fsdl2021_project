@@ -31,6 +31,9 @@ cat2int = {'buildings': 0, 'forest':1, 'glacier':2, 'mountain':3, 'sea':4, 'stre
 int2cat = {0: 'buildings', 1: 'forest', 2: 'glacier', 3: 'mountain', 4: 'sea', 5: 'street'}
 included_extensions = ['jpg','jpeg','png']
 
+RAW_DATA_DIR = os.environ.get('RAW_DATA_DIR')
+PROCESSED_DATA_DIR = os.environ.get('PROCESSED_DATA_DIR')
+
 class Resnet50Features(resnet.ResNet):
     def forward(self, x):
         x = self.conv1(x)
@@ -65,7 +68,7 @@ transform = transforms.Compose([
                                 normalize
                             ])
 
-def create_np_arrays(dataset_name, data_dir):
+def create_np_arrays(dataset_name):
 
     # load resnet model
     resnet_model = resnet50_feature_extractor(pretrained=True)
@@ -77,8 +80,8 @@ def create_np_arrays(dataset_name, data_dir):
     img_class_data = []
     for img_class in img_classes:
     
-        raw_data_dir = os.path.join(data_dir, 
-                    'raw/intel_image_scene/seg_{}/seg_{}'.format(dataset_name,dataset_name), img_class)
+        raw_data_dir = os.path.join(RAW_DATA_DIR, 
+                    'intel_image_scene/seg_{}/seg_{}'.format(dataset_name,dataset_name), img_class)
 
         img_files = [fn for fn in os.listdir(raw_data_dir) 
                         if any(fn.endswith(ext) for ext in included_extensions)]
@@ -101,57 +104,41 @@ def create_np_arrays(dataset_name, data_dir):
     return img_filename_data, feature_vector_data, img_class_data
 
 
-def create_dataset(**context):
+def create_dataset():
     print("Creating Dataset")
 
-    data_dir = '/workspace/data/' 
-
     # train
-    img_filename_data, feature_vector_data, img_class_data = create_np_arrays(dataset_name="train", data_dir=data_dir)
+    _, X_train, y_train = create_np_arrays(dataset_name="train")
 
-    feature_vector_path = os.path.join(data_dir, 'processed/train_feature_vector.npy',)
-    with open(feature_vector_path, 'wb') as f:
-        np.save(f, feature_vector_data)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'X_train.npy'), 'wb') as f:
+        np.save(f, X_train)
 
-    img_filename_path = os.path.join(data_dir, 'processed/train_img_filename.npy')
-    with open(img_filename_path, 'wb') as f:
-        np.save(f, img_filename_data)
-
-    img_class_path = os.path.join(data_dir, 'processed/train_img_class.npy')
-    with open(img_class_path, 'wb') as f:
-        np.save(f, img_class_data)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'y_train.npy'), 'wb') as f:
+        np.save(f, y_train)
 
     print("Saved Train Data")
 
+
     # test
-    img_filename_data, feature_vector_data, img_class_data = create_np_arrays(dataset_name="test", data_dir=data_dir)
+    _, X_test, y_test = create_np_arrays(dataset_name="test")
     
-    feature_vector_path = os.path.join(data_dir, 'processed/test_feature_vector.npy',)
-    with open(feature_vector_path, 'wb') as f:
-        np.save(f, feature_vector_data)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'X_test.npy'), 'wb') as f:
+        np.save(f, X_test)
 
-    img_filename_path = os.path.join(data_dir, 'processed/test_img_filename.npy')
-    with open(img_filename_path, 'wb') as f:
-        np.save(f, img_filename_data)
-
-    img_class_path = os.path.join(data_dir, 'processed/test_img_class.npy')
-    with open(img_class_path, 'wb') as f:
-        np.save(f, img_class_data)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'y_test.npy'), 'wb') as f:
+        np.save(f, y_test)
 
     print("Saved Test Data")
 
+    return 
+
 def train_model(**context):
     print("Train Model")
-    data_dir = '/workspace/data/'
 
-    X_train_path = os.path.join(data_dir,
-                                'processed/train_feature_vector.npy')
-    with open(X_train_path, 'rb') as f:
+    with open(os.path.join(PROCESSED_DATA_DIR, 'X_train.npy'), 'rb') as f:
         X_train = np.load(f)
 
-    y_train_path = os.path.join(data_dir,
-                                'processed/train_img_class.npy')
-    with open(y_train_path, 'rb') as f:
+    with open(os.path.join(PROCESSED_DATA_DIR, 'y_train.npy'), 'rb') as f:
         y_train = np.load(f)
 
     mlflow_run =  mlflow.start_run()    
@@ -166,16 +153,11 @@ def train_model(**context):
 
 def eval_model(**context):
     print("Eval Model")
-    data_dir = '/workspace/data/'
 
-    X_test_path = os.path.join(data_dir,
-                                'processed/test_feature_vector.npy')
-    with open(X_test_path, 'rb') as f:
+    with open(os.path.join(PROCESSED_DATA_DIR, 'X_test.npy'), 'rb') as f:
         X_test = np.load(f)
 
-    y_test_path = os.path.join(data_dir,
-                                'processed/test_img_class.npy')
-    with open(y_test_path, 'rb') as f:
+    with open(os.path.join(PROCESSED_DATA_DIR, 'y_test.npy'), 'rb') as f:
         y_test = np.load(f)
 
     # load model
@@ -205,9 +187,10 @@ def register_model(**context):
     mlflow.sklearn.log_model(
         sk_model=logmodel,
         artifact_path='sklearn-model',
-        register_model_name = 'sklearn-logmodel'
+        registered_model_name = 'sklearn-logmodel'
     )
 
+    mlflow.end_run()
 
 args = {
     'owner': 'airflow',
@@ -222,10 +205,11 @@ with DAG(
     tags=['scenes', 'intel']
 ) as dag:
 
+
     create_dataset_task = PythonOperator(
         task_id='load_data_and_preprocess', 
         python_callable=create_dataset, 
-        dag=dag
+        dag=dag,
     )
 
     train_model_task = PythonOperator(
@@ -245,7 +229,7 @@ with DAG(
     register_model_task = PythonOperator(
         task_id='register_model', 
         python_callable=register_model, 
-        dag=dag
+        dag=dag,
     )
 
     create_dataset_task >> train_model_task >> eval_model_task >> register_model_task
