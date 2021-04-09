@@ -133,5 +133,9 @@ logs/
 plugins/
 data/processed/
 mlruns/
-database/
+database/*
+!database/.gitkeep 
 data/raw/intel_image_scene
+
+# exclude everything
+somefolder/*
