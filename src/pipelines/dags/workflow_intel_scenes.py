@@ -52,7 +52,7 @@ def resnet50_feature_extractor(pretrained=False, **kwargs):
     model = Resnet50Features(resnet.Bottleneck,
                              [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(resnet.model_urls['resnet50']))
+        model.load_state_dict(model_zoo.load_url(resnet.model_urls['resnet50'], model_dir = '/opt/airflow/.cache/torch'))
     model.eval()
     return model
 
@@ -143,7 +143,6 @@ def create_dataset(**context):
 def train_model(**context):
     print("Train Model")
     data_dir = '/workspace/data/'
-    model_path = '/workspace/src/ml/intel_scenes.pkl'
 
     X_train_path = os.path.join(data_dir,
                                 'processed/train_feature_vector.npy')
@@ -155,22 +154,19 @@ def train_model(**context):
     with open(y_train_path, 'rb') as f:
         y_train = np.load(f)
 
-    with mlflow.start_run():    
-        max_iter = 10000
-        logmodel = LogisticRegression(max_iter=max_iter)
-        logmodel.fit(X_train,y_train)
+    mlflow_run =  mlflow.start_run()    
+    max_iter = 10000
+    logmodel = LogisticRegression(max_iter=max_iter)
+    logmodel.fit(X_train,y_train)
 
-        mlflow.log_param("max_iter", max_iter)
+    mlflow.log_param("max_iter", max_iter)
 
-    with open(model_path, 'wb') as f:
-        pickle.dump(logmodel, f)
+    return logmodel, mlflow_run
 
-    # context['ti'].xcom_push(key='trained_model_lr', value=lr)
 
 def eval_model(**context):
     print("Eval Model")
     data_dir = '/workspace/data/'
-    model_path = '/workspace/src/ml/intel_scenes.pkl'
 
     X_test_path = os.path.join(data_dir,
                                 'processed/test_feature_vector.npy')
@@ -183,18 +179,34 @@ def eval_model(**context):
         y_test = np.load(f)
 
     # load model
-    with open(model_path, 'rb') as f:
-        logmodel = pickle.load(f)
+    task_instance = context['ti']
+    task_instance_data = task_instance.xcom_pull(task_ids='train_model')
+    logmodel = task_instance_data[0]
+    active_run = task_instance_data[1]
+
+    mlflow.start_run(active_run.info.run_id)
 
     # check prediction report
     predictions = logmodel.predict(X_test)
     print(classification_report(y_test, predictions))
 
-    # context['ti'].xcom_push(key='trained_model_lr', value=lr)
+    return logmodel, active_run
 
 
-# def register_model():
-#     print("Register Model")
+def register_model(**context):
+    print("Register Model")
+    task_instance = context['ti']
+    task_instance_data = task_instance.xcom_pull(task_ids='train_model')
+    logmodel = task_instance_data[0]
+    active_run = task_instance_data[1]
+
+    mlflow.start_run(active_run.info.run_id)
+
+    mlflow.sklearn.log_model(
+        sk_model=logmodel,
+        artifact_path='sklearn-model',
+        register_model_name = 'sklearn-logmodel'
+    )
 
 
 args = {
@@ -230,15 +242,13 @@ with DAG(
         provide_context=True
     )
 
-    create_dataset_task >> train_model_task >> eval_model_task
+    register_model_task = PythonOperator(
+        task_id='register_model', 
+        python_callable=register_model, 
+        dag=dag
+    )
 
-    # register_model_task = PythonOperator(
-    #     task_id='register_model', 
-    #     python_callable=register_model, 
-    #     dag=dag
-    # )
-
-    # create_dataset_task >> train_model_task >> evaluate_model_task >> register_model_task
+    create_dataset_task >> train_model_task >> eval_model_task >> register_model_task
 
 
 if __name__ == "__main__":
