@@ -129,8 +129,9 @@ dmypy.json
 .pyre/
 
 # Custom
-src/logs/
-src/plugins/
+logs/
+plugins/
 data/processed/
 mlruns/
 database/
+data/raw/intel_image_scene
