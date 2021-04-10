@@ -139,6 +139,7 @@ def register_model(**context):
         registered_model_name='sklearn-elastic-net-model'
     )
 
+    mlflow.end_run()
 
 args = {
     'owner': 'airflow',
