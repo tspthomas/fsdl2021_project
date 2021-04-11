@@ -197,12 +197,12 @@ args = {
 }
 
 with DAG(
-    dag_id='workflow_intel_scenes',
+    dag_id='intel_scenes_train_resnet50_lr',
     default_args=args,
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),
     dagrun_timeout=timedelta(minutes=5),
-    tags=['scenes', 'intel']
+    tags=['intel_scenes', 'training', 'logistic_regression', 'scikit_learn', 'pytorch', 'resnet50']
 ) as dag:
 
 

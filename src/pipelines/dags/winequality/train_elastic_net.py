@@ -146,12 +146,12 @@ args = {
 }
 
 with DAG(
-    dag_id='train_lr',
+    dag_id='wine_quality_train_elastic_net',
     default_args=args,
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),
     dagrun_timeout=timedelta(minutes=5),
-    tags=['training', 'elastic_net', 'scikit_learn']
+    tags=['winequality', 'training', 'elastic_net', 'scikit_learn']
 ) as dag:
 
 
