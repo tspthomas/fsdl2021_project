@@ -9,18 +9,18 @@ echo -e "--------------------------------\n"
 echo -e "${NC}[Info] Creating required directories"
 if [[ -d ./src/pipelines/logs ]]
 then
-    echo -e "${YELLOW}[Warning] ./src/logs already exists"
+    echo -e "${YELLOW}[Warning] ./src/pipelines/logs already exists"
 else
-    mkdir ./src/pipelines//logs
-    echo -e "${NC}[Info] Created directory ./src/logs"
+    mkdir ./src/pipelines/logs
+    echo -e "${NC}[Info] Created directory ./src/pipelines/logs"
 fi
 
-if [[ -d ./src/pipelines//plugins ]]
+if [[ -d ./src/pipelines/plugins ]]
 then
-    echo -e "${YELLOW}[Warning] ./src/plugins already exists"
+    echo -e "${YELLOW}[Warning] ./src/pipelines/plugins already exists"
 else
-    mkdir ./src/pipelines//plugins
-    echo -e "${NC}[Info] Created directory ./src/plugins"
+    mkdir ./src/pipelines/plugins
+    echo -e "${NC}[Info] Created directory ./src/pipelines/plugins"
 fi
 
 echo -e "${NC}\n[Info] Creating required environment variables"
