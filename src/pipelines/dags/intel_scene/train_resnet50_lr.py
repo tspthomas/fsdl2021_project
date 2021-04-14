@@ -102,13 +102,6 @@ def register_model(**context):
 
     mlflow.start_run(active_run.info.run_id)
 
-    mlflow.sklearn.log_model(
-        sk_model=logmodel,
-        artifact_path='sklearn-logmodel', 
-        registered_model_name='intel_img_classifier-sklearn-logmodel',
-        signature=mlflow.models.infer_signature({'feature_vector': np.array([]), 'scene': np.array([])})
-    )
-
     # DEBUG, proving artifacts are written, however, not showing in mlflow UI
     client = mlflow.tracking.MlflowClient()
     artifacts = [f.path for f in client.list_artifacts(active_run.info.run_id, "sklearn-logmodel")]

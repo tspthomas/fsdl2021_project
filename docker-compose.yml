@@ -177,6 +177,7 @@ services:
     working_dir: /workspace
     volumes:
       - $PWD/src/webapp/:/workspace/
+      - ./data:/workspace/data
     command: sh -c "cd /workspace/ && ./run_debug.sh"
     restart: always
 

@@ -2,3 +2,5 @@ Flask==1.1.2
 Flask-API==2.0
 gunicorn==20.1.0
 mlflow==1.14.1
+torch==1.6.0
+torchvision==0.7.0

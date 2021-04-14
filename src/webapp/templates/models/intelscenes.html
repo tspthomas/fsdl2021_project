@@ -28,7 +28,7 @@
           <div class="position-sticky pt-3">
             <ul class="nav flex-column">
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#">
+                <a class="nav-link" aria-current="page" href="/">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                   Home
                 </a>
@@ -40,7 +40,7 @@
             </h6>
             <ul class="nav flex-column mb-2">
               <li class="nav-item">
-                <a class="nav-link" href="/intelscenes/">
+                <a class="nav-link active" href="#">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-layers"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                   Intel Scene Classification
                 </a>
@@ -51,14 +51,39 @@
     
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
           <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Home</h1>
+            <h1 class="h2">Intel Scene Classification</h1>
           </div>
           
-          Welcome to our project home page!
+            <div>
+              <form id="image_classification_form" enctype="multipart/form-data">
+                  <div class="mb-3">
+                    <label for="image_to_classify" class="form-label">Select an image to classify</label>
+                    <input type="file" class="form-control" name="upload_image" id="image_to_classify" required>
+                  </div>
+            
+                  <div class="mb-5">
+                    <input type="submit" value="Classify!" class="btn btn-primary"/>
+                  </div>
+              </form>
+            </div>
 
+          </br>
+    
+          <h3>Classification results</h3>
+          <div>
+            <div id="spinner-loader" class="spinner-border text-primary" role="status" style="display: none;">
+                
+            </div>
+
+            <div id="classification-results">
+                Results will appear here.
+            </div>
+          </div>
+          
         </main>
       </div>
     </div>
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
