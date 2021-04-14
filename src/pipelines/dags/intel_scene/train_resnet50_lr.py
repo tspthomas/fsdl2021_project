@@ -60,7 +60,7 @@ def train_model(**context):
         y_train = np.load(f)
 
     mlflow_run =  mlflow.start_run()    
-    mlflow.sklearn.autolog(log_models=True)
+    mlflow.sklearn.autolog(log_models=False)
 
     max_iter = 10000
     logmodel = LogisticRegression(max_iter=max_iter)
@@ -101,6 +101,12 @@ def register_model(**context):
     active_run = task_instance_data[1]
 
     mlflow.start_run(active_run.info.run_id)
+
+    mlflow.sklearn.log_model(
+        sk_model=logmodel,
+        artifact_path='model', 
+        registered_model_name='intel_scenes_train_resnet50_lr'
+    )
 
     # DEBUG, proving artifacts are written, however, not showing in mlflow UI
     client = mlflow.tracking.MlflowClient()
