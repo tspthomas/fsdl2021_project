@@ -133,8 +133,10 @@ logs/
 plugins/
 data/processed/
 mlruns/
-database/*
-!database/.gitkeep 
+storage/database/*
+storage/artifacts/*
+!storage/database/.gitkeep 
+!storage/artifacts/.gitkeep 
 data/raw/intel_image_scene
 
 # exclude everything

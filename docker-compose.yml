@@ -62,6 +62,7 @@ x-airflow-common:
     - ./src/pipelines/logs:/opt/airflow/logs
     - ./src/pipelines/plugins:/opt/airflow/plugins
     - ./data:/workspace/data
+    - ./storage/artifacts:/opt/airflow/storage/artifacts
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
     redis:
@@ -148,6 +149,7 @@ services:
       - "MLFLOW_SERVER_PORT=${MLFLOW_SERVER_PORT}"
       - "MLFLOW_ARTIFACT_ROOT=${MLFLOW_ARTIFACT_ROOT}"
       - "MLFLOW_BACKEND_STORE_URI=${MLFLOW_BACKEND_STORE_URI}"
+      - "MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}"
     ports:
       - "${MLFLOW_SERVER_PORT}:${MLFLOW_SERVER_PORT}"
     working_dir: /workspace

@@ -17,8 +17,8 @@ POSTGRES_USER=airflow
 POSTGRES_PASSWORD=airflow
 
 MLFLOW_SERVER_PORT=5033
-MLFLOW_ARTIFACT_ROOT=./mlruns/
-MLFLOW_BACKEND_STORE_URI=sqlite:///database/mlflow.db
+MLFLOW_ARTIFACT_ROOT=./storage/artifacts/
+MLFLOW_BACKEND_STORE_URI=sqlite:///storage/database/mlflow.db
 MLFLOW_TRACKING_URI=http://mlflow:${MLFLOW_SERVER_PORT}
 
 AIRFLOW_PORT=8081
@@ -63,3 +63,10 @@ You should be able to open MLFlow UI in `http://<host_ip>:5033` (or the port you
 
 ### Accessing Web App UI
 You should be able to open Web App UI in `http://<host_ip>:8082` (or the port you specified in `FLASK_PORT`).
+
+### Cleaning up MLFlow data (optional)
+
+Simply run the following command in the root directory of this repository
+```
+./docker/mlflow/clean_mlflow_data.sh
+```

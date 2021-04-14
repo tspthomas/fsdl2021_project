@@ -1,7 +1,11 @@
 FROM apache/airflow:2.0.1
 
-USER airflow
+USER root
+RUN apt update -y
+RUN apt upgrade -y
+RUN apt install -y git
 
+USER airflow
 ARG AIRFLOW_HOME=/opt/airflow
 
 COPY docker/airflow/requirements.txt /tmp/requirements.txt
