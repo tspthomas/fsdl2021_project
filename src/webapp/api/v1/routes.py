@@ -3,6 +3,7 @@ import json
 import torch
 import urllib
 import logging
+import mlflow.pyfunc
 
 from PIL import Image
 
@@ -16,13 +17,20 @@ from flask_api import status
 
 
 #TODO improve this, move to common library
-from api.v1.fe import transform
+from api.v1.fe import transform, int2cat
 from api.v1.fe import resnet50_feature_extractor
 
 api_blueprint = Blueprint('/api/v1', __name__)
 
 #TODO improve this, preload
 resnet_model = resnet50_feature_extractor(pretrained=True)
+
+model_name = 'intel_scenes_train_resnet50_lr'
+stage = 'Production'
+
+lr = mlflow.pyfunc.load_model(
+    model_uri=f"models:/{model_name}/{stage}"
+)
 
 
 @api_blueprint.route('/intelscenes/', methods=['POST'])
@@ -41,12 +49,14 @@ def intelscenes():
         features = resnet_model(x)
         logging.info(features.shape)
     
-        
         # classify
+        prediction = lr.predict(features.detach().numpy())
+        prediction_class = int2cat[int(prediction)]
+        logging.info(prediction_class)
 
         # build results
 
-        return json.dumps({'features': str(features)}), status.HTTP_200_OK
+        return json.dumps({'prediction': prediction_class, 'features': str(features)}), status.HTTP_200_OK
     except Exception as e:
         logging.info(str(e))
         return json.dumps({'error_message': str(e)}), status.HTTP_500_INTERNAL_SERVER_ERROR
