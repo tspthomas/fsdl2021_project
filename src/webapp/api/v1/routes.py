@@ -55,8 +55,8 @@ def intelscenes():
         logging.info(prediction_class)
 
         # build results
-
-        return json.dumps({'prediction': prediction_class, 'features': str(features)}), status.HTTP_200_OK
+        results = {'prediction': prediction_class, 'classes': [*int2cat.values()]}
+        return json.dumps(results), status.HTTP_200_OK
     except Exception as e:
         logging.info(str(e))
         return json.dumps({'error_message': str(e)}), status.HTTP_500_INTERNAL_SERVER_ERROR

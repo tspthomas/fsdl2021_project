@@ -15,6 +15,7 @@
 
     <!-- Custom styles for this template -->
     <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
   </head>
 
   <body>
@@ -60,23 +61,26 @@
                     <label for="image_to_classify" class="form-label">Select an image to classify</label>
                     <input type="file" class="form-control" name="upload_image" id="image_to_classify" required>
                   </div>
+                  
+                  <div>
+                    <img id="img_to_upload" src=""/>
+                  </div>
             
                   <div class="mb-5">
                     <input type="submit" value="Classify!" class="btn btn-primary"/>
                   </div>
               </form>
             </div>
-
-          </br>
-    
-          <h3>Classification results</h3>
+          
+          <h4 class="pt-3 pb-2 mb-3 border-bottom">Classification results</h4>
+        
           <div>
             <div id="spinner-loader" class="spinner-border text-primary" role="status" style="display: none;">
                 
             </div>
 
             <div id="classification-results">
-                Results will appear here.
+              Classification results will appear here.
             </div>
           </div>
           

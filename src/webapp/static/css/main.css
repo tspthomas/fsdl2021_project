@@ -1,0 +1,6 @@
+#img_to_upload {
+    max-height: 256px;
+    height: auto;
+    width: auto;
+    padding: 10px;
+}
