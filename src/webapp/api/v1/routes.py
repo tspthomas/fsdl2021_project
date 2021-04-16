@@ -1,19 +1,26 @@
 import os
+import time
 import json
 import torch
-import urllib
+import shutil
 import logging
 import mlflow.pyfunc
 
 from PIL import Image
 
 from flask import g
-from flask import jsonify
 from flask import request
 from flask import Blueprint
 from flask import send_from_directory
+from flask import current_app as app
 
 from flask_api import status
+
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
+
+from utils import create_feedback_folder
+from constants import INTELSCENES_FOLDER
 
 
 #TODO improve this, move to common library
@@ -40,9 +47,10 @@ def intelscenes():
 
     try:       
         image_query = request.files['upload_image']
-        img = Image.open(image_query.stream).convert('RGB')
+        filename = __save_to_disk(image_query)
 
         # Do feature extraction
+        img = Image.open(image_query.stream).convert('RGB')
         x = transform(img)
         x = torch.unsqueeze(x, dim=0)
         
@@ -55,23 +63,45 @@ def intelscenes():
         logging.info(prediction_class)
 
         # build results
-        results = {'prediction': prediction_class, 'classes': [*int2cat.values()]}
+        results = {
+            'prediction': prediction_class,
+            'classes': [*int2cat.values()],
+            'uploaded_image_id': filename
+        }
         return json.dumps(results), status.HTTP_200_OK
     except Exception as e:
         logging.info(str(e))
         return json.dumps({'error_message': str(e)}), status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@api_blueprint.route('/image/<folder_id>/<path:filename>')
-def get_image(folder_id, filename):
-    src_path = os.path.join(DOCUMENTS_PATH, folder_id, 'images')
-    return send_from_directory(src_path, filename)
+@api_blueprint.route('/feedback/', methods=['POST'])
+def feedback():
+
+    logging.info(request.form)
+
+    try:
+        feedback_class = request.form['feedback_class']
+        image_id = request.form['uploaded_image_id']
+
+        #TODO - make it generic
+        created_dir = create_feedback_folder(INTELSCENES_FOLDER, feedback_class)
+
+        # move image to feedback folder
+        src = os.path.join(app.config['UPLOAD_FOLDER'], image_id)
+        dest = os.path.join(created_dir, image_id)
+        shutil.move(src, dest)
+
+        return json.dumps({'image_folder': dest}), status.HTTP_200_OK
+    except Exception as e:
+        logging.info(str(e))
+        return json.dumps({'error_message': str(e)}), status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@api_blueprint.route('/document/<path:filepath>')
-def get_document(filepath):
-    folder = os.path.join('/', os.path.dirname(filepath))
-    filename = os.path.basename(filepath)
-    filename = urllib.parse.unquote(urllib.parse.unquote(filename))
-    print(folder, filename)
-    return send_from_directory(folder, filename)
+def __save_to_disk(image_file):
+    filename = secure_filename(image_file.filename)
+    
+    filename = '{}'.format(time.time()) + filename
+    complete_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    FileStorage(stream=image_file).save(complete_filename)
+    return filename

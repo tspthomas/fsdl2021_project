@@ -138,6 +138,10 @@ storage/artifacts/*
 !storage/database/.gitkeep 
 !storage/artifacts/.gitkeep 
 data/raw/intel_image_scene
+data/processed/*
+!data/processed/.gitkeep 
+data/feedback/*
+!data/feedback/.gitkeep 
 
 # exclude everything
 somefolder/*

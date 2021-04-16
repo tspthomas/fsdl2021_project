@@ -20,6 +20,7 @@ logging.basicConfig(level='INFO',
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'happysecreoffsdl'
+app.config['UPLOAD_FOLDER'] = 'upload'
 app.debug = True
 app.register_blueprint(v1.api_blueprint, url_prefix='/api/v1')
 

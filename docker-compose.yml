@@ -164,6 +164,8 @@ services:
     restart: always
 
   webapp:
+    depends_on:
+      - mlflow
     build:
       context: ./
       dockerfile: ./docker/webapp/Dockerfile
