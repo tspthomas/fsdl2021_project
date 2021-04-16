@@ -9,10 +9,11 @@ from api.v1 import routes as v1
 from pprint import pprint
 from mlflow.tracking import MlflowClient
 
+from constants import UPLOAD_FOLDER
+
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.DEBUG)
-
 
 logging.basicConfig(level='INFO',
                     format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
@@ -20,19 +21,13 @@ logging.basicConfig(level='INFO',
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'happysecreoffsdl'
-app.config['UPLOAD_FOLDER'] = 'upload'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.debug = True
 app.register_blueprint(v1.api_blueprint, url_prefix='/api/v1')
 
 
 @app.route("/")
 def index():
-    client = MlflowClient()
-    for rm in client.list_registered_models():
-        logging.info(dict(rm))
-
-    logging.info('Aham!')
-
     return render_template('index.html')
 
 

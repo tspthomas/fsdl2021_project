@@ -19,9 +19,9 @@ from flask_api import status
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 
-from utils import create_feedback_folder
+from constants import FEEDBACK_FOLDER
 from constants import INTELSCENES_FOLDER
-
+from constants import INTELSCENES_RESNET50_LR_MODEL
 
 #TODO improve this, move to common library
 from api.v1.fe import transform, int2cat
@@ -32,11 +32,9 @@ api_blueprint = Blueprint('/api/v1', __name__)
 #TODO improve this, preload
 resnet_model = resnet50_feature_extractor(pretrained=True)
 
-model_name = 'intel_scenes_train_resnet50_lr'
 stage = 'Production'
-
 lr = mlflow.pyfunc.load_model(
-    model_uri=f"models:/{model_name}/{stage}"
+    model_uri=f"models:/{INTELSCENES_RESNET50_LR_MODEL}/{stage}"
 )
 
 
@@ -84,7 +82,7 @@ def feedback():
         image_id = request.form['uploaded_image_id']
 
         #TODO - make it generic
-        created_dir = create_feedback_folder(INTELSCENES_FOLDER, feedback_class)
+        created_dir = __create_feedback_folder(INTELSCENES_FOLDER, feedback_class)
 
         # move image to feedback folder
         src = os.path.join(app.config['UPLOAD_FOLDER'], image_id)
@@ -105,3 +103,9 @@ def __save_to_disk(image_file):
 
     FileStorage(stream=image_file).save(complete_filename)
     return filename
+
+
+def __create_feedback_folder(dataset, class_name):
+    dest = os.path.join(FEEDBACK_FOLDER, dataset, class_name)
+    os.makedirs(dest, exist_ok=True)
+    return dest
