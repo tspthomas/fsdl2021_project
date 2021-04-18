@@ -18,46 +18,18 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
 
-from intel_scene.utils import resnet50_feature_extractor, create_np_arrays, RAW_DATA_DIR, PROCESSED_DATA_DIR
+from intel_scene.utils import PROCESSED_DATA_DIR, Data
 
 np.random.seed(33)
-
-def create_dataset():
-    print("Creating Dataset")
-
-    # train
-    _, X_train, y_train = create_np_arrays(dataset_name="train")
-
-    with open(os.path.join(PROCESSED_DATA_DIR, 'X_train.npy'), 'wb') as f:
-        np.save(f, X_train)
-
-    with open(os.path.join(PROCESSED_DATA_DIR, 'y_train.npy'), 'wb') as f:
-        np.save(f, y_train)
-
-    print("Saved Train Data")
-
-
-    # test
-    _, X_test, y_test = create_np_arrays(dataset_name="test")
-    
-    with open(os.path.join(PROCESSED_DATA_DIR, 'X_test.npy'), 'wb') as f:
-        np.save(f, X_test)
-
-    with open(os.path.join(PROCESSED_DATA_DIR, 'y_test.npy'), 'wb') as f:
-        np.save(f, y_test)
-
-    print("Saved Test Data")
-
-    return 
 
 def train_model(**context):
     print("Train Model")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'X_train.npy'), 'rb') as f:
-        X_train = np.load(f)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'train.pickle'), 'rb') as f:
+        train = pickle.load(f)
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'y_train.npy'), 'rb') as f:
-        y_train = np.load(f)
+    X_train = train.X
+    y_train = train.y
 
     mlflow_run =  mlflow.start_run()    
     mlflow.sklearn.autolog(log_models=False)
@@ -72,11 +44,11 @@ def train_model(**context):
 def eval_model(**context):
     print("Eval Model")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'X_test.npy'), 'rb') as f:
-        X_test = np.load(f)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'test.pickle'), 'rb') as f:
+        test = pickle.load(f)
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'y_test.npy'), 'rb') as f:
-        y_test = np.load(f)
+    X_test = test.X
+    y_test = test.y
 
     # load model
     task_instance = context['ti']
@@ -129,13 +101,6 @@ with DAG(
     tags=['intel_scenes', 'training', 'logistic_regression', 'scikit_learn', 'pytorch', 'resnet50']
 ) as dag:
 
-
-    create_dataset_task = PythonOperator(
-        task_id='load_data_and_preprocess', 
-        python_callable=create_dataset, 
-        dag=dag,
-    )
-
     train_model_task = PythonOperator(
         task_id='train_model', 
         python_callable=train_model, 
@@ -156,7 +121,7 @@ with DAG(
         dag=dag,
     )
 
-    create_dataset_task >> train_model_task >> eval_model_task >> register_model_task
+    train_model_task >> eval_model_task >> register_model_task
 
 
 if __name__ == "__main__":

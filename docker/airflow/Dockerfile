@@ -13,3 +13,7 @@ RUN pip install -r /tmp/requirements.txt
 
 # https://github.com/apache/airflow/issues/14266
 RUN pip install apache-airflow-providers-microsoft-azure==1.2.0rc1 
+
+# RUN dvc init --no-scm
+# RUN dvc add --external /workspace/data/processed
+# RUN dvc config core.no_scm false
