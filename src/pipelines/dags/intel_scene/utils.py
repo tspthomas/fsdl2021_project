@@ -60,7 +60,7 @@ transform = transforms.Compose([
 
 def extract_features_to_data(dataset_name, preload_dict=False):
     '''
-    out_dataset_name (str): train / test
+    dataset_name (str): train / test
     preload_dict (bool): preload or not
 
     returns: (Data)
@@ -79,6 +79,7 @@ def extract_features_to_data(dataset_name, preload_dict=False):
         data_dir = os.path.join(RAW_DATA_DIR, 
                     f'intel_image_scene/seg_{dataset_name}/seg_{dataset_name}', img_class)
 
+        # Hack to account for non-images in the folder
         img_files = [fn for fn in os.listdir(data_dir) 
                         if any(fn.endswith(ext) for ext in included_extensions)]
 
@@ -94,7 +95,7 @@ def extract_features_to_data(dataset_name, preload_dict=False):
                 x = torch.unsqueeze(x, dim=0)
                 features = resnet_model(x)
 
-                data.seen_features[features]=True
+                data.seen_features[img_path] = True
                 data.X.append(features.data[0].numpy())
                 data.y.append(cat2int[img_class])
 
