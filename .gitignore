@@ -131,7 +131,6 @@ dmypy.json
 # Custom
 logs/
 plugins/
-data/processed/
 mlruns/
 storage/database/*
 storage/artifacts/*
@@ -143,5 +142,14 @@ data/processed/*
 data/feedback/*
 !data/feedback/.gitkeep 
 
+data/raw/.dvc
+data/raw/.dvcignore
+data/raw/intel_image_scene.dvc
+
 # exclude everything
 somefolder/*
+
+#For mac OS
+data/.DS_Store
+
+.vscode

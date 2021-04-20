@@ -6,3 +6,5 @@ torchsummary==1.5.1
 torchvision==0.7.0
 matplotlib
 dvc
+dvc[gdrive]
+PyDrive2

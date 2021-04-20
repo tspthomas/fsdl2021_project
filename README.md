@@ -70,3 +70,32 @@ Simply run the following command in the root directory of this repository
 ```
 ./docker/mlflow/clean_mlflow_data.sh
 ```
+
+### DVC
+DVC is enabled in `/data/raw` and linked to Google Drive. Steps taken to initiate the dvc repo and link to Google Drive. Commands to initiate: 
+```
+docker exec -it fsdl2021_project_airflow-worker_1 /bin/bash
+cd /workspace/data/raw
+dvc init --no-scm
+dvc remote add -d storage gdrive://<end_of_google_drive_link>
+# authentication required
+dvc add /workspace/data/raw/intel_image_scene
+dvc push
+```
+
+`/workspace/data/raw/.dvc` contains the configuration files necessary for dvc to track data files and directories. 
+
+DVC allows the dataset to be stored on Google Drive. Downloading data:
+```
+dvc pull
+```
+
+DVC allows version control of data. For example, when new files are added:
+```
+cd /workspace/data/raw
+dvc status # show the changes
+dvc add intel_image_scene
+dvc push
+```
+
+At this time, still researching how to checkout previous versions without git dependency.
