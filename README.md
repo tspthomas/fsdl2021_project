@@ -25,6 +25,10 @@ AIRFLOW_PORT=8081
 FLOWER_PORT=5556
 
 FLASK_PORT=8082
+
+RAW_DATA_DIR=/workspace/data/raw/
+FEEDBACK_DATA_DIR=/workspace/data/feedback/
+PROCESSED_DATA_DIR=/workspace/data/processed/
 ```
 
 **IMPORTANT:** Do not version this file in git.

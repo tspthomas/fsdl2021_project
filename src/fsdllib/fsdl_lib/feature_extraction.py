@@ -26,19 +26,25 @@ class Resnet50Features(resnet.ResNet):
 
         return x_feat
 
-def resnet50_feature_extractor(pretrained=False, **kwargs):
+
+def resnet50_feature_extractor(pretrained=False, model_dir=None, **kwargs):
     model = Resnet50Features(resnet.Bottleneck,
                              [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(resnet.model_urls['resnet50']))
+        url = resnet.model_urls['resnet50']
+        model.load_state_dict(model_zoo.load_url(url, model_dir=model_dir))
     model.eval()
     return model
 
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
 
-transform = transforms.Compose([
-                                transforms.Resize(224),
-                                transforms.ToTensor(),
-                                normalize
-                            ])
+def get_transform():
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    transform = transforms.Compose([
+                                    transforms.Resize(224),
+                                    transforms.ToTensor(),
+                                    normalize
+                                  ])
+
+    return transform

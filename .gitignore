@@ -142,6 +142,5 @@ data/processed/*
 !data/processed/.gitkeep 
 data/feedback/*
 !data/feedback/.gitkeep 
-
-# exclude everything
-somefolder/*
+src/webapp/upload/*
+!src/webapp/upload/.gitkeep 

@@ -5,6 +5,10 @@ RUN apt update -y
 RUN apt upgrade -y
 RUN apt install -y git
 
+# Install custom Python lib
+COPY src/fsdllib /tmp/fsdllib
+RUN cd /tmp/fsdllib && python setup.py install
+
 USER airflow
 ARG AIRFLOW_HOME=/opt/airflow
 
@@ -13,7 +17,3 @@ RUN pip install -r /tmp/requirements.txt
 
 # https://github.com/apache/airflow/issues/14266
 RUN pip install apache-airflow-providers-microsoft-azure==1.2.0rc1 
-
-# RUN dvc init --no-scm
-# RUN dvc add --external /workspace/data/processed
-# RUN dvc config core.no_scm false

@@ -4,7 +4,7 @@ import json
 import torch
 import shutil
 import logging
-import mlflow.pyfunc
+import mlflow
 
 from PIL import Image
 
@@ -23,19 +23,28 @@ from constants import FEEDBACK_FOLDER
 from constants import INTELSCENES_FOLDER
 from constants import INTELSCENES_RESNET50_LR_MODEL
 
-#TODO improve this, move to common library
-from api.v1.fe import transform, int2cat
-from api.v1.fe import resnet50_feature_extractor
+from fsdl_lib import feature_extraction as fe
+
 
 api_blueprint = Blueprint('/api/v1', __name__)
 
-#TODO improve this, preload
-resnet_model = resnet50_feature_extractor(pretrained=True)
 
-stage = 'Production'
-lr = mlflow.pyfunc.load_model(
-    model_uri=f"models:/{INTELSCENES_RESNET50_LR_MODEL}/{stage}"
-)
+def get_resnet50():
+    if 'resnet50' not in g:
+        g.resnet50 = fe.resnet50_feature_extractor(pretrained=True)
+
+    return g.resnet50
+
+
+def get_lr_intelscenes():
+    stage = 'Production'
+
+    if 'lr_intelscenes' not in g:
+        g.lr_intelscenes = mlflow.pyfunc.load_model(
+            model_uri=f"models:/{INTELSCENES_RESNET50_LR_MODEL}/{stage}"
+        )
+
+    return g.lr_intelscenes
 
 
 @api_blueprint.route('/intelscenes/', methods=['POST'])
@@ -49,21 +58,24 @@ def intelscenes():
 
         # Do feature extraction
         img = Image.open(image_query.stream).convert('RGB')
+        transform = fe.get_transform()
         x = transform(img)
         x = torch.unsqueeze(x, dim=0)
         
-        features = resnet_model(x)
+        resnet50_model = get_resnet50()
+        features = resnet50_model(x)
         logging.info(features.shape)
     
         # classify
+        lr = get_lr_intelscenes()
         prediction = lr.predict(features.detach().numpy())
-        prediction_class = int2cat[int(prediction)]
+        prediction_class = fe.int2cat[int(prediction)]
         logging.info(prediction_class)
 
         # build results
         results = {
             'prediction': prediction_class,
-            'classes': [*int2cat.values()],
+            'classes': [*fe.int2cat.values()],
             'uploaded_image_id': filename
         }
         return json.dumps(results), status.HTTP_200_OK

@@ -1,23 +1,16 @@
-import os
-import numpy as np
-import pandas as pd
-import pickle
-
-import mlflow
+from airflow import DAG
+from airflow.utils.dates import days_ago
+from airflow.operators.bash import BashOperator
 
 from datetime import timedelta
 
-from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.utils.dates import days_ago
-np.random.seed(33)
 
 args = {
     'owner': 'airflow',
 }
 
 with DAG(
-    dag_id='sync_feedback',
+    dag_id='intel_scenes_sync_feedback',
     default_args=args,
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),

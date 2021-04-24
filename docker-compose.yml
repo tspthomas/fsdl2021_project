@@ -55,9 +55,9 @@ x-airflow-common:
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
     AIRFLOW__WEBSERVER__DAG_DEFAULT_VIEW: 'graph'
     MLFLOW_TRACKING_URI: '${MLFLOW_TRACKING_URI}'
-    FEEDBACK_DATA_DIR : '/workspace/data/feedback'
-    RAW_DATA_DIR : '/workspace/data/raw'
-    PROCESSED_DATA_DIR : '/workspace/data/processed'
+    RAW_DATA_DIR: '${RAW_DATA_DIR}'
+    FEEDBACK_DATA_DIR: '${FEEDBACK_DATA_DIR}'
+    PROCESSED_DATA_DIR: '${PROCESSED_DATA_DIR}'
   volumes:
     - ./src/pipelines/dags:/opt/airflow/dags
     - ./src/pipelines/logs:/opt/airflow/logs

@@ -1,19 +1,15 @@
 import os
-import numpy as np
+import pickle
 
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
-
-from dvc.api import make_checkpoint
+from airflow.operators.python_operator import PythonOperator
 
 from datetime import timedelta
 
 from intel_scene.utils import extract_features_to_data, PROCESSED_DATA_DIR, Data
 
-np.random.seed(33)
 
-import pickle
 def create_dataset():
     print("Creating Dataset")
 
@@ -34,40 +30,13 @@ def create_dataset():
 
     return
 
-# def create_dataset():
-#     print("Creating Dataset")
-
-#     # train
-#     _, X_train, y_train = create_np_arrays(in_data='raw', out_dataset_name="train")
-
-#     with open(os.path.join(PROCESSED_DATA_DIR, 'X_train.npy'), 'wb') as f:
-#         np.save(f, X_train)
-
-#     with open(os.path.join(PROCESSED_DATA_DIR, 'y_train.npy'), 'wb') as f:
-#         np.save(f, y_train)
-
-#     print("Saved Train Data")
-
-
-#     # test
-#     _, X_test, y_test = create_np_arrays(in_data='raw', out_dataset_name="test")
-    
-#     with open(os.path.join(PROCESSED_DATA_DIR, 'X_test.npy'), 'wb') as f:
-#         np.save(f, X_test)
-
-#     with open(os.path.join(PROCESSED_DATA_DIR, 'y_test.npy'), 'wb') as f:
-#         np.save(f, y_test)
-
-#     print("Saved Test Data")
-
-#     return
 
 args = {
     'owner': 'airflow',
 }
 
 with DAG(
-    dag_id='create_dataset',
+    dag_id='intel_scenes_create_dataset',
     default_args=args,
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),
