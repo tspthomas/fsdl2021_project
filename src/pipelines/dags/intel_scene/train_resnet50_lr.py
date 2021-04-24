@@ -22,6 +22,7 @@ from intel_scene.utils import PROCESSED_DATA_DIR, Data
 
 np.random.seed(33)
 
+
 def train_model(**context):
     print("Train Model")
 
@@ -31,12 +32,12 @@ def train_model(**context):
     X_train = train.X
     y_train = train.y
 
-    mlflow_run =  mlflow.start_run()    
+    mlflow_run = mlflow.start_run()
     mlflow.sklearn.autolog(log_models=False)
 
     max_iter = 10000
     logmodel = LogisticRegression(max_iter=max_iter)
-    logmodel.fit(X_train,y_train)
+    logmodel.fit(X_train, y_train)
 
     return logmodel, mlflow_run
 
@@ -76,17 +77,21 @@ def register_model(**context):
 
     mlflow.sklearn.log_model(
         sk_model=logmodel,
-        artifact_path='model', 
+        artifact_path='model',
         registered_model_name='intel_scenes_train_resnet50_lr'
     )
 
     # DEBUG, proving artifacts are written, however, not showing in mlflow UI
     client = mlflow.tracking.MlflowClient()
-    artifacts = [f.path for f in client.list_artifacts(active_run.info.run_id, "sklearn-logmodel")]
+    artifacts = [
+        f.path for f in client.list_artifacts(
+            active_run.info.run_id,
+            "sklearn-logmodel")]
     print("artifacts {}".format(artifacts))
     print("mlflow.get_artifact_uri {}".format(mlflow.get_artifact_uri()))
 
     mlflow.end_run()
+
 
 args = {
     'owner': 'airflow',
@@ -102,22 +107,22 @@ with DAG(
 ) as dag:
 
     train_model_task = PythonOperator(
-        task_id='train_model', 
-        python_callable=train_model, 
+        task_id='train_model',
+        python_callable=train_model,
         dag=dag,
         provide_context=True
     )
 
     eval_model_task = PythonOperator(
-        task_id='eval_model', 
-        python_callable=eval_model, 
+        task_id='eval_model',
+        python_callable=eval_model,
         dag=dag,
         provide_context=True
     )
 
     register_model_task = PythonOperator(
-        task_id='register_model', 
-        python_callable=register_model, 
+        task_id='register_model',
+        python_callable=register_model,
         dag=dag,
     )
 

@@ -1,12 +1,24 @@
 import torch
 import torch.utils.model_zoo as model_zoo
 import torchvision.transforms as transforms
-from torchvision.models import resnet 
+from torchvision.models import resnet
 
 img_classes = ['buildings', 'forest', 'glacier', 'mountain', 'sea', 'street']
-cat2int = {'buildings': 0, 'forest':1, 'glacier':2, 'mountain':3, 'sea':4, 'street':5}
-int2cat = {0: 'buildings', 1: 'forest', 2: 'glacier', 3: 'mountain', 4: 'sea', 5: 'street'}
-included_extensions = ['jpg','jpeg','png']
+cat2int = {
+    'buildings': 0,
+    'forest': 1,
+    'glacier': 2,
+    'mountain': 3,
+    'sea': 4,
+    'street': 5}
+int2cat = {
+    0: 'buildings',
+    1: 'forest',
+    2: 'glacier',
+    3: 'mountain',
+    4: 'sea',
+    5: 'street'}
+included_extensions = ['jpg', 'jpeg', 'png']
 
 
 class Resnet50Features(resnet.ResNet):
@@ -42,9 +54,9 @@ def get_transform():
                                      std=[0.229, 0.224, 0.225])
 
     transform = transforms.Compose([
-                                    transforms.Resize(224),
-                                    transforms.ToTensor(),
-                                    normalize
-                                  ])
+        transforms.Resize(224),
+        transforms.ToTensor(),
+        normalize
+    ])
 
     return transform

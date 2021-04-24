@@ -15,8 +15,9 @@ from constants import UPLOAD_FOLDER
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.DEBUG)
 
-logging.basicConfig(level='INFO',
-                    format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
+logging.basicConfig(
+    level='INFO',
+    format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
 
 
 app = Flask(__name__)

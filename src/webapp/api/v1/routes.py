@@ -52,7 +52,7 @@ def intelscenes():
 
     logging.info(request.files)
 
-    try:       
+    try:
         image_query = request.files['upload_image']
         filename = __save_to_disk(image_query)
 
@@ -61,11 +61,11 @@ def intelscenes():
         transform = fe.get_transform()
         x = transform(img)
         x = torch.unsqueeze(x, dim=0)
-        
+
         resnet50_model = get_resnet50()
         features = resnet50_model(x)
         logging.info(features.shape)
-    
+
         # classify
         lr = get_lr_intelscenes()
         prediction = lr.predict(features.detach().numpy())
@@ -81,7 +81,8 @@ def intelscenes():
         return json.dumps(results), status.HTTP_200_OK
     except Exception as e:
         logging.info(str(e))
-        return json.dumps({'error_message': str(e)}), status.HTTP_500_INTERNAL_SERVER_ERROR
+        return json.dumps({'error_message': str(e)}
+                          ), status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @api_blueprint.route('/feedback/', methods=['POST'])
@@ -93,8 +94,9 @@ def feedback():
         feedback_class = request.form['feedback_class']
         image_id = request.form['uploaded_image_id']
 
-        #TODO - make it generic
-        created_dir = __create_feedback_folder(INTELSCENES_FOLDER, feedback_class)
+        # TODO - make it generic
+        created_dir = __create_feedback_folder(
+            INTELSCENES_FOLDER, feedback_class)
 
         # move image to feedback folder
         src = os.path.join(app.config['UPLOAD_FOLDER'], image_id)
@@ -104,12 +106,13 @@ def feedback():
         return json.dumps({'image_folder': dest}), status.HTTP_200_OK
     except Exception as e:
         logging.info(str(e))
-        return json.dumps({'error_message': str(e)}), status.HTTP_500_INTERNAL_SERVER_ERROR
+        return json.dumps({'error_message': str(e)}
+                          ), status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 def __save_to_disk(image_file):
     filename = secure_filename(image_file.filename)
-    
+
     filename = '{}'.format(time.time()) + filename
     complete_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 

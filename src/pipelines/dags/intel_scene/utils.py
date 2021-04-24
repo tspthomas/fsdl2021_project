@@ -5,7 +5,7 @@ from PIL import Image
 from fsdl_lib import feature_extraction as fe
 
 
-included_extensions = ['jpg','jpeg','png']
+included_extensions = ['jpg', 'jpeg', 'png']
 FEEDBACK_DATA_DIR = os.environ.get('FEEDBACK_DATA_DIR')
 RAW_DATA_DIR = os.environ.get('RAW_DATA_DIR')
 PROCESSED_DATA_DIR = os.environ.get('PROCESSED_DATA_DIR')
@@ -34,18 +34,18 @@ def extract_features_to_data(dataset_name, preload_dict=False):
     data = Data()
 
     if preload_dict:
-        with open(os.path.join(RAW_DATA_DIR ,'processed', f'{dataset_name}.pickle'), 'rb') as f:
+        with open(os.path.join(RAW_DATA_DIR, 'processed', f'{dataset_name}.pickle'), 'rb') as f:
             data = pickle.load(f)
 
     for img_class in fe.img_classes:
-    
-        data_dir = os.path.join(RAW_DATA_DIR, 
+
+        data_dir = os.path.join(RAW_DATA_DIR,
                                 f'intel_image_scene/seg_{dataset_name}',
                                 img_class)
 
         # Hack to account for non-images in the folder
-        img_files = [fn for fn in os.listdir(data_dir) 
-                        if any(fn.endswith(ext) for ext in included_extensions)]
+        img_files = [fn for fn in os.listdir(data_dir)
+                     if any(fn.endswith(ext) for ext in included_extensions)]
 
         for img_file in img_files:
 

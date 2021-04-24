@@ -87,7 +87,7 @@ def train_model(**context):
 
     mlflow.log_param("alpha", alpha)
     mlflow.log_param("l1_ratio", l1_ratio)
-    
+
     return lr_model, mlflow_run
 
 
@@ -96,7 +96,7 @@ def evaluate_model(**context):
     base_path = '/workspace/data/'
 
     X_test_path = os.path.join(base_path,
-                            'processed/X_test.npy')
+                               'processed/X_test.npy')
     with open(X_test_path, 'rb') as f:
         X_test = np.load(f)
 
@@ -132,7 +132,7 @@ def register_model(**context):
     active_run = task_instance_data[1]
 
     mlflow.start_run(active_run.info.run_id)
-    
+
     mlflow.sklearn.log_model(
         sk_model=lr_model,
         artifact_path='sklearn-model',
@@ -140,6 +140,7 @@ def register_model(**context):
     )
 
     mlflow.end_run()
+
 
 args = {
     'owner': 'airflow',
@@ -153,30 +154,29 @@ with DAG(
     tags=['winequality', 'training', 'elastic_net', 'scikit_learn']
 ) as dag:
 
-
     load_data_task = PythonOperator(
-        task_id='load_data_and_preprocess', 
-        python_callable=load_data_and_preprocess, 
+        task_id='load_data_and_preprocess',
+        python_callable=load_data_and_preprocess,
         dag=dag
     )
 
     train_model_task = PythonOperator(
-        task_id='train_model', 
-        python_callable=train_model, 
+        task_id='train_model',
+        python_callable=train_model,
         dag=dag,
         provide_context=True
     )
 
     evaluate_model_task = PythonOperator(
-        task_id='evaluate_model', 
-        python_callable=evaluate_model, 
+        task_id='evaluate_model',
+        python_callable=evaluate_model,
         dag=dag,
         provide_context=True
     )
 
     register_model_task = PythonOperator(
-        task_id='register_model', 
-        python_callable=register_model, 
+        task_id='register_model',
+        python_callable=register_model,
         dag=dag
     )
 

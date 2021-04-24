@@ -22,7 +22,7 @@ def create_dataset():
     print("Saved Train Data")
 
     # test
-    test = extract_features_to_data(dataset_name='test')    
+    test = extract_features_to_data(dataset_name='test')
 
     with open(os.path.join(PROCESSED_DATA_DIR, 'test.pickle'), 'wb') as f:
         pickle.dump(test, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -45,12 +45,12 @@ with DAG(
 ) as dag:
 
     create_dataset_task = PythonOperator(
-        task_id='create_dataset', 
-        python_callable=create_dataset, 
+        task_id='create_dataset',
+        python_callable=create_dataset,
         dag=dag,
     )
 
-    create_dataset_task 
+    create_dataset_task
 
 
 if __name__ == "__main__":
