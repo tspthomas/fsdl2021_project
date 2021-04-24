@@ -131,7 +131,8 @@ dmypy.json
 # Custom
 logs/
 plugins/
-data/processed/
+data/processed/*
+!data/processed/.gitkeep
 mlruns/
 storage/database/*
 storage/artifacts/*
