@@ -145,3 +145,8 @@ data/feedback/*
 !data/feedback/.gitkeep 
 src/webapp/upload/*
 !src/webapp/upload/.gitkeep 
+
+# For Mac OS
+.DS_Store
+data/.DS_Store
+data/raw/.DS_Store

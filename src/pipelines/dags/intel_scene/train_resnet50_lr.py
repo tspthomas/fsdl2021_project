@@ -22,15 +22,27 @@ from intel_scene.utils import PROCESSED_DATA_DIR, Data
 
 np.random.seed(33)
 
+def load_data(**context):
+    print("Loading Data")
+
+    with open(os.path.join(PROCESSED_DATA_DIR, 'intel_image_scene', 'data.pickle'), 'rb') as f:
+        data = pickle.load(f)
+
+    print("Splitting Dataset")
+    X_train, X_test, y_train, y_test = train_test_split(
+        data.X, data.y, test_size=0.33, random_state=42)
+
+    return X_train, X_test, y_train, y_test
 
 def train_model(**context):
     print("Train Model")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'train.pickle'), 'rb') as f:
-        train = pickle.load(f)
-
-    X_train = train.X
-    y_train = train.y
+    task_instance = context['ti']
+    task_instance_data = task_instance.xcom_pull(task_ids='load_data')
+    X_train = task_instance_data[0]
+    X_test = task_instance_data[1]
+    y_train = task_instance_data[2]
+    y_test = task_instance_data[3]
 
     mlflow_run = mlflow.start_run()
     mlflow.sklearn.autolog(log_models=False)
@@ -39,23 +51,19 @@ def train_model(**context):
     logmodel = LogisticRegression(max_iter=max_iter)
     logmodel.fit(X_train, y_train)
 
-    return logmodel, mlflow_run
+    return logmodel, mlflow_run, X_test, y_test
 
 
 def eval_model(**context):
     print("Eval Model")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'test.pickle'), 'rb') as f:
-        test = pickle.load(f)
-
-    X_test = test.X
-    y_test = test.y
-
-    # load model
+    # load model and test data
     task_instance = context['ti']
     task_instance_data = task_instance.xcom_pull(task_ids='train_model')
     logmodel = task_instance_data[0]
     active_run = task_instance_data[1]
+    X_test = task_instance_data[2]
+    y_test = task_instance_data[3]
 
     mlflow.start_run(active_run.info.run_id)
 
@@ -81,15 +89,6 @@ def register_model(**context):
         registered_model_name='intel_scenes_train_resnet50_lr'
     )
 
-    # DEBUG, proving artifacts are written, however, not showing in mlflow UI
-    client = mlflow.tracking.MlflowClient()
-    artifacts = [
-        f.path for f in client.list_artifacts(
-            active_run.info.run_id,
-            "sklearn-logmodel")]
-    print("artifacts {}".format(artifacts))
-    print("mlflow.get_artifact_uri {}".format(mlflow.get_artifact_uri()))
-
     mlflow.end_run()
 
 
@@ -105,6 +104,13 @@ with DAG(
     dagrun_timeout=timedelta(minutes=5),
     tags=['intel_scenes', 'training', 'logistic_regression', 'scikit_learn', 'pytorch', 'resnet50']
 ) as dag:
+
+    load_data_task = PythonOperator(
+        task_id='load_data',
+        python_callable=load_data,
+        dag=dag,
+        provide_context=True
+    )
 
     train_model_task = PythonOperator(
         task_id='train_model',
@@ -126,7 +132,7 @@ with DAG(
         dag=dag,
     )
 
-    train_model_task >> eval_model_task >> register_model_task
+    load_data_task >> train_model_task >> eval_model_task >> register_model_task
 
 
 if __name__ == "__main__":
