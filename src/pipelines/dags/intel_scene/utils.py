@@ -18,8 +18,9 @@ class Data():
         self.y = []
 
 
-def extract_features_to_data(preload_dict=False):
+def extract_features_to_data(dataset_name, preload_dict=False):
     '''
+    dataset_name (str): train / test
     preload_dict (bool): preload or not
 
     returns: (Data)
@@ -33,13 +34,13 @@ def extract_features_to_data(preload_dict=False):
     data = Data()
 
     if preload_dict:
-        with open(os.path.join(PROCESSED_DATA_DIR, 'intel_image_scene', 'data.pickle'), 'rb') as f:
+        with open(os.path.join(RAW_DATA_DIR, 'processed', f'{dataset_name}.pickle'), 'rb') as f:
             data = pickle.load(f)
 
     for img_class in fe.img_classes:
 
         data_dir = os.path.join(RAW_DATA_DIR,
-                                'intel_image_scene',
+                                f'intel_image_scene/seg_{dataset_name}',
                                 img_class)
 
         # Hack to account for non-images in the folder
@@ -62,6 +63,6 @@ def extract_features_to_data(preload_dict=False):
                 data.X.append(features.data[0].numpy())
                 data.y.append(fe.cat2int[img_class])
 
-        print("{} processed".format(img_class))
+        print("{}: {} processed".format(dataset_name, img_class))
 
     return data

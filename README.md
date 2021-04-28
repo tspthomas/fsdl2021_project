@@ -40,7 +40,7 @@ Simply run the following command in the root directory of this repository
 ./docker/airflow/init_env.sh
 ```
 
-Check the environment variables `AIRFLOW_UID` and `AIRFLOW_GID` were created in the `.env` file. Also, double-check the directories `src/pipelines/logs` and `src/pipelines/plugins` were created.
+Check the environment variables `AIRFLOW_UID` and `AIRFLOW_GID` were created in the `.env` file. Also, double-check the directories `src/logs` and `src/plugins` were created.
 
 ### Starting the System
 

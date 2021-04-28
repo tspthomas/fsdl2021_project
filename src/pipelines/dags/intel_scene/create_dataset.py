@@ -13,12 +13,20 @@ from intel_scene.utils import extract_features_to_data, PROCESSED_DATA_DIR, Data
 def create_dataset():
     print("Creating Dataset")
 
-    data = extract_features_to_data()
+    # train
+    train = extract_features_to_data(dataset_name="train")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'intel_image_scene', 'data.pickle'), 'wb') as f:
-        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(os.path.join(PROCESSED_DATA_DIR, 'train.pickle'), 'wb') as f:
+        pickle.dump(train, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    print("Saved Dataset")
+    print("Saved Train Data")
+
+    # test
+    test = extract_features_to_data(dataset_name='test')
+
+    with open(os.path.join(PROCESSED_DATA_DIR, 'test.pickle'), 'wb') as f:
+        pickle.dump(test, f, protocol=pickle.HIGHEST_PROTOCOL)
+    print("Saved Test Data")
 
     return
 
