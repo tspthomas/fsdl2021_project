@@ -1,6 +1,6 @@
 import os
 import torch
-
+import pickle
 from PIL import Image
 from fsdl_lib import feature_extraction as fe
 
@@ -17,11 +17,9 @@ class Data():
         self.X = []
         self.y = []
 
-
-def extract_features_to_data(dataset_name, preload_dict=False):
+def extract_features_to_data(dataset_name):
     '''
     dataset_name (str): train / test
-    preload_dict (bool): preload or not
 
     returns: (Data)
     '''
@@ -31,16 +29,20 @@ def extract_features_to_data(dataset_name, preload_dict=False):
                                                  model_dir=model_dir)
     transform = fe.get_transform()
 
-    data = Data()
+    preload_data_file = os.path.join(PROCESSED_DATA_DIR, 
+                                    'intel_image_scene', 
+                                    f'{dataset_name}.pickle')
 
-    if preload_dict:
-        with open(os.path.join(RAW_DATA_DIR, 'processed', f'{dataset_name}.pickle'), 'rb') as f:
+    if os.path.isfile(preload_data_file):
+        with open(preload_data_file, 'rb') as f:
             data = pickle.load(f)
+    else:
+        data = Data()
 
     for img_class in fe.img_classes:
 
         data_dir = os.path.join(RAW_DATA_DIR,
-                                f'intel_image_scene/seg_{dataset_name}',
+                                f'intel_image_scene/{dataset_name}',
                                 img_class)
 
         # Hack to account for non-images in the folder

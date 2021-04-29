@@ -26,7 +26,7 @@ np.random.seed(33)
 def train_model(**context):
     print("Train Model")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'train.pickle'), 'rb') as f:
+    with open(os.path.join(PROCESSED_DATA_DIR, 'intel_image_scene', 'train.pickle'), 'rb') as f:
         train = pickle.load(f)
 
     X_train = train.X
@@ -45,7 +45,7 @@ def train_model(**context):
 def eval_model(**context):
     print("Eval Model")
 
-    with open(os.path.join(PROCESSED_DATA_DIR, 'test.pickle'), 'rb') as f:
+    with open(os.path.join(PROCESSED_DATA_DIR, 'intel_image_scene', 'test.pickle'), 'rb') as f:
         test = pickle.load(f)
 
     X_test = test.X
@@ -80,15 +80,6 @@ def register_model(**context):
         artifact_path='model',
         registered_model_name='intel_scenes_train_resnet50_lr'
     )
-
-    # DEBUG, proving artifacts are written, however, not showing in mlflow UI
-    client = mlflow.tracking.MlflowClient()
-    artifacts = [
-        f.path for f in client.list_artifacts(
-            active_run.info.run_id,
-            "sklearn-logmodel")]
-    print("artifacts {}".format(artifacts))
-    print("mlflow.get_artifact_uri {}".format(mlflow.get_artifact_uri()))
 
     mlflow.end_run()
 
