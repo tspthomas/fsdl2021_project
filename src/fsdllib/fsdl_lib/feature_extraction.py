@@ -1,7 +1,12 @@
+import os
 import torch
 import torch.utils.model_zoo as model_zoo
 import torchvision.transforms as transforms
+
+from PIL import Image
 from torchvision.models import resnet
+
+from fsdl_lib.data import load_or_create_features
 
 img_classes = ['buildings', 'forest', 'glacier', 'mountain', 'sea', 'street']
 cat2int = {
@@ -60,3 +65,34 @@ def get_transform():
     ])
 
     return transform
+
+
+def extract_features(src_path, dest_path, data_folder, model, transform):
+
+    src = os.path.join(src_path, data_folder)
+    features_data = load_or_create_features(dest_path, data_folder)
+    
+    for folder in os.listdir(src):
+        folder_path = os.path.join(src, folder)
+        folder_images = [fn for fn in os.listdir(folder_path)
+                         if any(fn.endswith(ext) for ext in included_extensions)]
+
+        for img_file in folder_images:
+            img_path = os.path.join(folder_path, img_file)
+
+            if features_data.path_exists(img_path):
+                continue
+
+            img = Image.open(img_path)
+            img = img.convert(mode='RGB')
+            x = transform(img)
+            x = torch.unsqueeze(x, dim=0)
+            feat = model(x)
+
+            features_data.add(feat.data[0].numpy(),
+                              cat2int[folder],
+                              img_path)
+
+        print("{}: {} processed".format(data_folder, folder))
+
+    return features_data 
