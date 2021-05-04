@@ -139,6 +139,7 @@ storage/artifacts/*
 !storage/database/.gitkeep 
 !storage/artifacts/.gitkeep 
 data/raw/intel_image_scene
+data/raw/intel_scene_images
 data/processed/*
 !data/processed/.gitkeep 
 data/feedback/*
