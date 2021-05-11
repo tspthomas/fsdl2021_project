@@ -1,0 +1,6 @@
+[submodule "raw"]
+	path = raw
+	url = git@github.com:tspthomas/fsdl2021_project_datasets.git
+[submodule "data/raw"]
+	path = data/raw
+	url = git@github.com:tspthomas/fsdl2021_project_datasets.git
