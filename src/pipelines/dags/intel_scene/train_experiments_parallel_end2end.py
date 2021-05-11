@@ -82,43 +82,44 @@ def train_model_LogisticRegression_100(**kwargs):
 
     return experiment_id, model
 
-# def eval_model_LogisticRegression_100(**kwargs):
-#     print("Eval Model")
+def eval_model_LogisticRegression_100(**kwargs):
+    print("Eval Model")
 
-#     data_folder = 'seg_test_300'
-#     dest_path = os.path.join(kwargs['dest'], kwargs['name'])
-#     test_features = load_features(dest_path, data_folder)
+    data_folder = 'seg_test_300'
+    dest_path = os.path.join(kwargs['dest'], kwargs['name'])
+    test_features = load_features(dest_path, data_folder)
 
-#     X_test = test_features.X
-#     y_test = test_features.y
+    X_test = test_features.X
+    y_test = test_features.y
 
-#     # load models and active runs
-#     task_instance = kwargs['ti']
-#     # task_instance_data = task_instance.xcom_pull(task_ids='train_models')
-#     task_instance_data = task_instance.xcom_pull()
-#     experiment_id = task_instance_data[0]
-#     model = task_instance_data[1]
+    # load models and active runs
+    task_instance = kwargs['ti']
+    task_instance_data = task_instance.xcom_pull(task_ids='train_model_LogisticRegression_100')
+    # task_instance_data = task_instance.xcom_pull()
+    experiment_id = task_instance_data[0]
+    model = task_instance_data[1]
 
-#     client = MlflowClient()
+    client = MlflowClient()
 
-#     # evaluate trained models        
-#     active_run = client.create_run(experiment_id)
+    # evaluate trained models        
+    active_run = client.create_run(experiment_id)
 
-#     with mlflow.start_run(active_run.info.run_id):
+    with mlflow.start_run(active_run.info.run_id):
 
-#         y_pred = model.predict(X_test)
-#         mlflow.log_metric('test_accuracy_score',
-#                         sklearn.metrics.accuracy_score(y_test, y_pred))
+        y_pred = model.predict(X_test)
+        mlflow.log_metric('test_accuracy_score',
+                        sklearn.metrics.accuracy_score(y_test, y_pred))
 
-#         f1_score = sklearn.metrics.f1_score(y_test, y_pred, average='weighted')
-#         mlflow.log_metric('test_f1_score', f1_score)
+        f1_score = sklearn.metrics.f1_score(y_test, y_pred, average='weighted')
+        mlflow.log_metric('test_f1_score', f1_score)
 
-#         mlflow.log_metric('test_precision_score',
-#                         sklearn.metrics.precision_score(y_test, y_pred, average='weighted'))
-#         mlflow.log_metric('test_recall_score',
-#                         sklearn.metrics.recall_score(y_test, y_pred, average='weighted'))
+        mlflow.log_metric('test_precision_score',
+                        sklearn.metrics.precision_score(y_test, y_pred, average='weighted'))
+        mlflow.log_metric('test_recall_score',
+                        sklearn.metrics.recall_score(y_test, y_pred, average='weighted'))
 
-#     return experiment_id, model, f1_score
+    print(f"Model: {model}, f1_score: {f1_score}")
+    return experiment_id, model, f1_score
 
 def train_model_LogisticRegression_500(**kwargs):
     print("Train Model")
@@ -146,8 +147,7 @@ def train_model_LogisticRegression_500(**kwargs):
 
     return experiment_id, model
 
-# TODO: check if need more specific arguments
-def eval_model(**kwargs):
+def eval_model_LogisticRegression_500(**kwargs):
     print("Eval Model")
 
     data_folder = 'seg_test_300'
@@ -159,7 +159,7 @@ def eval_model(**kwargs):
 
     # load models and active runs
     task_instance = kwargs['ti']
-    task_instance_data = task_instance.xcom_pull() # TODO: check if this pulls from previous task, as its same function used
+    task_instance_data = task_instance.xcom_pull("train_model_LogisticRegression_500")
     experiment_id = task_instance_data[0]
     model = task_instance_data[1]
 
@@ -182,48 +182,38 @@ def eval_model(**kwargs):
         mlflow.log_metric('test_recall_score',
                         sklearn.metrics.recall_score(y_test, y_pred, average='weighted'))
 
+    print(f"Model: {model}, f1_score: {f1_score}")
     return experiment_id, model, f1_score
 
-# TODO: why isn't this working ?
 def register_best_model(**kwargs):
     # return
     print("Register Model")
     
     task_instance = kwargs['ti']
     task_instance_data = task_instance.xcom_pull(task_ids = [
-        'eval_model_LogisticRegression_100'
+        'eval_model_LogisticRegression_100',
         'eval_model_LogisticRegression_500'
         ]
     )
 
     print(task_instance_data)
-    # best_f1_score = 0
-    # best_model = None
-    # for _ , model , f1_score in task_instance_data:
-    #     if f1_score > best_f1_score:
-    #         best_model = model
-    # experiment_id = task_instance_data[0]
-    # models = task_instance_data[1]
-    # f1_score = task_instance_data[2]
+    experiment_id = task_instance_data[0][0]
+    best_f1_score = 0
+    best_model = None
 
-    # for f1_score in f1_scores:
-    #     print(f'models {f1_score}')
-
-    # best_model, best_f1_score = None, 0
-
-    # for model, f1_score in models, f1_scores:
-    #     if f1_score > best_f1_score:
-    #         best_model = model
+    for _ , model , f1_score in task_instance_data:
+        if f1_score > best_f1_score:
+            best_model = model
     
-    # client = MlflowClient()
-    # active_run = client.create_run(experiment_id)
-    # with mlflow.start_run(active_run.info.run_id):
+    client = MlflowClient()
+    active_run = client.create_run(experiment_id)
+    with mlflow.start_run(active_run.info.run_id):
 
-    #     mlflow.sklearn.log_model(
-    #         sk_model=best_model,
-    #         artifact_path='model',
-    #         registered_model_name='intel_scenes_train_experiment'
-    #     )
+        mlflow.sklearn.log_model(
+            sk_model=best_model,
+            artifact_path='model',
+            registered_model_name='intel_scenes_train_experiment'
+        )
 
 args = {
     'owner': 'airflow',
@@ -267,7 +257,7 @@ with DAG(
 
     eval_model_LogisticRegression_100_task = PythonOperator(
         task_id='eval_model_LogisticRegression_100',
-        python_callable=eval_model,
+        python_callable=eval_model_LogisticRegression_100,
         op_kwargs=dataset_kwargs,
         dag=dag
     )
@@ -281,7 +271,7 @@ with DAG(
 
     eval_model_LogisticRegression_500_task = PythonOperator(
         task_id='eval_model_LogisticRegression_500',
-        python_callable=eval_model,
+        python_callable=eval_model_LogisticRegression_500,
         op_kwargs=dataset_kwargs,
         dag=dag
     )
