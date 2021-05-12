@@ -48,13 +48,30 @@ def create_dataset(**kwargs):
     test_features =  fe.extract_features(src_path, dest_path, data_folder, model, transform)
     save_features(dest_path, data_folder, test_features)
 
+    train_features_hash = train_features.get_hash()
+    test_features_hash = test_features.get_hash()
+
+    return train_features_hash, test_features_hash
+
 def create_experiment(**kwargs):
     print("Create Experiment")
 
-    t = datetime.now()
-    experiment_id = mlflow.create_experiment(f"intel_scenes_compare_models_{t}")
+    # create or get existing experiment
+    experiment = mlflow.get_experiment_by_name(kwargs['experiment_name'])
 
-    return experiment_id
+    if experiment:
+        print("Experiment already existings. Using the same one.")
+        experiment_id = experiment.experiment_id
+    else:
+        print("Experiment does not exist. Creating new one")
+        experiment_id = mlflow.create_experiment(kwargs['experiment_name'])  
+
+    task_instance = kwargs['ti']
+    task_instance_data = task_instance.xcom_pull()
+    train_features_hash = task_instance_data[0]
+    test_features_hash = task_instance_data[1]
+
+    return experiment_id, train_features_hash, test_features_hash
 
 def train_test(**kwargs):
     #train
@@ -87,6 +104,10 @@ def train_test(**kwargs):
 
         model.fit(X_train, y_train)
     
+        mlflow.log_param('train_features_hash', task_instance_data[1])
+        mlflow.log_param('test_features_hash', task_instance_data[2])
+        mlflow.log_param('features', kwargs['features'])
+
         y_pred = model.predict(X_test)
         mlflow.log_metric('test_accuracy_score',
                         sklearn.metrics.accuracy_score(y_test, y_pred))
@@ -99,7 +120,6 @@ def train_test(**kwargs):
         mlflow.log_metric('test_recall_score',
                         sklearn.metrics.recall_score(y_test, y_pred, average='weighted'))
 
-    print(f"Model: {model.get_params()}, f1_score: {f1_score}")
     return experiment_id, model, f1_score
     
 def register_best_model(**kwargs):
@@ -133,6 +153,8 @@ def get_kwargs(model=None):
     return {
         'src':  os.environ.get('RAW_DATA_DIR'),
         'dest':  os.environ.get('PROCESSED_DATA_DIR'),
+        'experiment_name': 'intel_scene_images_parallel',
+        'features': 'resnet50',
         'name': 'intel_scene_images',
         'model': model
     }

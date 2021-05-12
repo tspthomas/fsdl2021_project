@@ -49,12 +49,30 @@ def create_dataset(**kwargs):
     test_features =  fe.extract_features(src_path, dest_path, data_folder, model, transform)
     save_features(dest_path, data_folder, test_features)
 
+    train_features_hash = train_features.get_hash()
+    test_features_hash = test_features.get_hash()
+
+    return train_features_hash, test_features_hash
+
 def create_experiment(**kwargs):
     print("Create Experiment")
 
-    t = datetime.now()
-    experiment_id = mlflow.create_experiment(f"intel_scenes_compare_models_{t}")
-    return experiment_id
+    # create or get existing experiment
+    experiment = mlflow.get_experiment_by_name(kwargs['experiment_name'])
+
+    if experiment:
+        print("Experiment already existings. Using the same one.")
+        experiment_id = experiment.experiment_id
+    else:
+        print("Experiment does not exist. Creating new one")
+        experiment_id = mlflow.create_experiment(kwargs['experiment_name'])  
+
+    task_instance = kwargs['ti']
+    task_instance_data = task_instance.xcom_pull()
+    train_features_hash = task_instance_data[0]
+    test_features_hash = task_instance_data[1]
+
+    return experiment_id, train_features_hash, test_features_hash
 
 def train_models(**kwargs):
     print("Train Models")
@@ -81,6 +99,10 @@ def train_models(**kwargs):
             mlflow.sklearn.autolog(log_models=False)
 
             model.fit(X_train, y_train)
+
+            mlflow.log_param('train_features_hash', task_instance_data[1])
+            mlflow.log_param('test_features_hash', task_instance_data[2])
+            mlflow.log_param('features', kwargs['features'])
 
     return experiment_id, models
 
@@ -164,6 +186,8 @@ with DAG(
         'src':  os.environ.get('RAW_DATA_DIR'),
         'dest':  os.environ.get('PROCESSED_DATA_DIR'),
         'name': 'intel_scene_images',
+        'experiment_name': 'intel_scene_images',
+        'features': 'restnet50',
         'models': [
             LogisticRegression(max_iter = 100),
             LogisticRegression(max_iter = 500),
