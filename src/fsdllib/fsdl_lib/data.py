@@ -16,6 +16,9 @@ class FeaturesData(object):
     def path_exists(self, path):
         return path in self.paths
 
+    def get_hash(self):
+        return hash(frozenset(self.paths))
+
 
 def __get_features_path(dest_path, data_folder):
     filename = f'{data_folder}.pkl'

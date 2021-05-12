@@ -157,7 +157,7 @@ with DAG(
     tags=['winequality', 'training', 'elastic_net', 'scikit_learn', 'end_to_end']
 ) as dag:
 
-    dataset_kwargs = {
+    dag_kwargs = {
         'src':  os.environ.get('RAW_DATA_DIR'),
         'dest':  os.environ.get('PROCESSED_DATA_DIR'),
         'name': 'winequality',
@@ -173,21 +173,21 @@ with DAG(
     load_data_task = PythonOperator(
         task_id='load_data_and_preprocess',
         python_callable=load_data_and_preprocess,
-        op_kwargs=dataset_kwargs,
+        op_kwargs=dag_kwargs,
         dag=dag
     )
 
     train_model_task = PythonOperator(
         task_id='train_model',
         python_callable=train_model,
-        op_kwargs=dataset_kwargs,
+        op_kwargs=dag_kwargs,
         dag=dag
     )
 
     eval_model_task = PythonOperator(
         task_id='eval_model',
         python_callable=eval_model,
-        op_kwargs=dataset_kwargs,
+        op_kwargs=dag_kwargs,
         dag=dag
     )
 
