@@ -152,7 +152,7 @@ args = {
 }
 
 with DAG(
-    dag_id='intel_scenes_train_models_end2end',
+    dag_id='intel_scenes_train_test_register_sequence',
     default_args=args,
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),
