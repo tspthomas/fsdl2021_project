@@ -10,7 +10,6 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier
 import matplotlib
 
 import mlflow
-from mlflow.tracking import MlflowClient
 
 from datetime import timedelta
 from datetime import datetime
@@ -24,6 +23,7 @@ from fsdl_lib.data import save_features
 from fsdl_lib.data import load_features
 
 np.random.seed(33)
+
 
 def create_dataset(**kwargs):
     print("Creating Dataset")
@@ -53,6 +53,7 @@ def create_dataset(**kwargs):
 
     return train_features_hash, test_features_hash
 
+
 def create_experiment(**kwargs):
     print("Create Experiment")
 
@@ -72,6 +73,7 @@ def create_experiment(**kwargs):
     test_features_hash = task_instance_data[1]
 
     return experiment_id, train_features_hash, test_features_hash
+
 
 def train_test(**kwargs):
     #train
@@ -94,57 +96,60 @@ def train_test(**kwargs):
     task_instance_data = task_instance.xcom_pull(task_ids='create_experiment')
     experiment_id = task_instance_data[0]
 
-    client = MlflowClient()
-
     model = kwargs['model']
-    active_run = client.create_run(experiment_id)
 
-    with mlflow.start_run(active_run.info.run_id):
-        mlflow.sklearn.autolog(log_models=False)
+    active_run = mlflow.start_run(experiment_id=experiment_id)
+    mlflow.sklearn.autolog(log_models=False)
 
-        model.fit(X_train, y_train)
-    
-        mlflow.log_param('train_features_hash', task_instance_data[1])
-        mlflow.log_param('test_features_hash', task_instance_data[2])
-        mlflow.log_param('features', kwargs['features'])
+    model.fit(X_train, y_train)
 
-        y_pred = model.predict(X_test)
-        mlflow.log_metric('test_accuracy_score',
-                        sklearn.metrics.accuracy_score(y_test, y_pred))
+    mlflow.log_param('train_features_hash', task_instance_data[1])
+    mlflow.log_param('test_features_hash', task_instance_data[2])
+    mlflow.log_param('features', kwargs['features'])
 
-        f1_score = sklearn.metrics.f1_score(y_test, y_pred, average='weighted')
-        mlflow.log_metric('test_f1_score', f1_score)
+    y_pred = model.predict(X_test)
+    mlflow.log_metric('test_accuracy_score',
+                    sklearn.metrics.accuracy_score(y_test, y_pred))
 
-        mlflow.log_metric('test_precision_score',
-                        sklearn.metrics.precision_score(y_test, y_pred, average='weighted'))
-        mlflow.log_metric('test_recall_score',
-                        sklearn.metrics.recall_score(y_test, y_pred, average='weighted'))
+    f1_score = sklearn.metrics.f1_score(y_test, y_pred, average='weighted')
+    mlflow.log_metric('test_f1_score', f1_score)
 
-    return experiment_id, model, f1_score
-    
+    mlflow.log_metric('test_precision_score',
+                    sklearn.metrics.precision_score(y_test, y_pred, average='weighted'))
+    mlflow.log_metric('test_recall_score',
+                    sklearn.metrics.recall_score(y_test, y_pred, average='weighted'))
+
+    mlflow.end_run()
+
+    return active_run, model, f1_score
+
+
 def register_best_model(**kwargs):
     print("Register Model")
     
     task_instance = kwargs['ti']
     task_instance_data = task_instance.xcom_pull(task_ids=kwargs['task_ids'])
 
-    experiment_id = task_instance_data[0][0]
     best_f1_score = 0
     best_model = None
+    best_run = None
 
-    for _ , model , f1_score in task_instance_data:
+    for mlflow_run , model , f1_score in task_instance_data:
         if f1_score > best_f1_score:
             best_model = model
+            best_f1_score = f1_score
+            best_run = mlflow_run
     
-    client = MlflowClient()
-    active_run = client.create_run(experiment_id)
-    with mlflow.start_run(active_run.info.run_id):
+    mlflow.start_run(best_run.info.run_id)
 
-        mlflow.sklearn.log_model(
-            sk_model=best_model,
-            artifact_path='model',
-            registered_model_name='intel_scenes_train_experiment'
-        )
+    mlflow.sklearn.log_model(
+        sk_model=best_model,
+        artifact_path='model',
+        registered_model_name='intel_scenes_train_resnet50'
+    )
+
+    mlflow.end_run()
+
 
 def get_kwargs(model=None):
     '''
@@ -159,8 +164,37 @@ def get_kwargs(model=None):
         'model': model
     }
 
+
 args = {
     'owner': 'airflow',
+}
+
+models = {
+    'train_test_lr_A': {
+        'model': LogisticRegression,
+        'hparams': {
+            'penalty': 'l2',
+            'C': 1.0,
+            'random_state': 33
+        }
+    },
+    'train_test_lr_B': {
+        'model': LogisticRegression,
+        'hparams': {
+            'penalty': 'l2',
+            'C': 2.0,
+            'random_state': 33
+        }
+    },
+    'train_test_lr_C': {
+        'model': LogisticRegression,
+        'hparams': {
+            'penalty': 'l1',
+            'C': 1.0,
+            'solver': 'liblinear',
+            'random_state': 33
+        }
+    }
 }
 
 with DAG(
@@ -186,51 +220,26 @@ with DAG(
         dag=dag
     )
 
-    train_test_LogisticRegression_100_task = PythonOperator(
-        task_id='train_test_LogisticRegression_100',
-        python_callable=train_test,
-        op_kwargs=get_kwargs(model=LogisticRegression(max_iter=100)),
-        dag=dag
-    )
-
-    train_test_LogisticRegression_500_task = PythonOperator(
-        task_id='train_test_LogisticRegression_500',
-        python_callable=train_test,
-        op_kwargs=get_kwargs(model=LogisticRegression(max_iter=500)),
-        dag=dag
-    )
-
-    train_test_SGD_100_task = PythonOperator(
-        task_id='train_test_SGD_100',
-        python_callable=train_test,
-        op_kwargs=get_kwargs(model=SGDClassifier(max_iter=100)),
-        dag=dag
-    )
-
-    train_test_SGD_500_task = PythonOperator(
-        task_id='train_test_SGD_500',
-        python_callable=train_test,
-        op_kwargs=get_kwargs(model=SGDClassifier(max_iter=500)),
-        dag=dag
-    )
-
     register_best_model_task = PythonOperator(
         task_id='register_best_model',
         python_callable=register_best_model,
-        op_kwargs={"task_ids": [
-            'train_test_LogisticRegression_100',
-            'train_test_LogisticRegression_500',
-            'train_test_SGD_100',
-            'train_test_SGD_500'
-        ]},
+        op_kwargs={"task_ids": list(models.keys())},
         dag=dag
     )
 
-    create_dataset_task >> create_experiment_task >> train_test_LogisticRegression_100_task >> register_best_model_task
-    create_dataset_task >> create_experiment_task >> train_test_LogisticRegression_500_task >> register_best_model_task
-    create_dataset_task >> create_experiment_task >> train_test_SGD_100_task >> register_best_model_task
-    create_dataset_task >> create_experiment_task >> train_test_SGD_500_task >> register_best_model_task
+    for task_id, model_args in models.items():
 
+        model_class = model_args['model']
+        model_hparams = model_args['hparams']
+        
+        train_test_task = PythonOperator(
+            task_id=task_id,
+            python_callable=train_test,
+            op_kwargs=get_kwargs(model=model_class(**model_hparams)),
+            dag=dag
+        )
+
+        create_dataset_task >> create_experiment_task >> train_test_task >> register_best_model_task
 
 if __name__ == "__main__":
     dag.cli()
