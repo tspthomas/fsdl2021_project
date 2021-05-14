@@ -22,8 +22,9 @@ from fsdl_lib import feature_extraction as fe
 from fsdl_lib.data import save_features
 from fsdl_lib.data import load_features
 
-np.random.seed(33)
+from intel_scene.models_config import models_config
 
+np.random.seed(33)
 
 def create_dataset(**kwargs):
     print("Creating Dataset")
@@ -145,7 +146,7 @@ def register_best_model(**kwargs):
     mlflow.sklearn.log_model(
         sk_model=best_model,
         artifact_path='model',
-        registered_model_name='intel_scenes_train_resnet50'
+        registered_model_name='intel_scenes_train_resnet50_parallel'
     )
 
     mlflow.end_run()
@@ -167,34 +168,6 @@ def get_kwargs(model=None):
 
 args = {
     'owner': 'airflow',
-}
-
-models = {
-    'train_test_lr_A': {
-        'model': LogisticRegression,
-        'hparams': {
-            'penalty': 'l2',
-            'C': 1.0,
-            'random_state': 33
-        }
-    },
-    'train_test_lr_B': {
-        'model': LogisticRegression,
-        'hparams': {
-            'penalty': 'l2',
-            'C': 2.0,
-            'random_state': 33
-        }
-    },
-    'train_test_lr_C': {
-        'model': LogisticRegression,
-        'hparams': {
-            'penalty': 'l1',
-            'C': 1.0,
-            'solver': 'liblinear',
-            'random_state': 33
-        }
-    }
 }
 
 with DAG(
@@ -223,11 +196,11 @@ with DAG(
     register_best_model_task = PythonOperator(
         task_id='register_best_model',
         python_callable=register_best_model,
-        op_kwargs={"task_ids": list(models.keys())},
+        op_kwargs={"task_ids": list(models_config.keys())},
         dag=dag
     )
 
-    for task_id, model_args in models.items():
+    for task_id, model_args in models_config.items():
 
         model_class = model_args['model']
         model_hparams = model_args['hparams']
