@@ -87,6 +87,7 @@ def train_model(**kwargs):
     mlflow.log_param('train_features_hash', task_instance_data[0])
     mlflow.log_param('test_features_hash', task_instance_data[1])
     mlflow.log_param('features', kwargs['features'])
+    mlflow.log_param('dag_type', 'default')
 
     return logmodel, mlflow_run
 
@@ -135,7 +136,7 @@ def register_model(**kwargs):
     mlflow.sklearn.log_model(
         sk_model=logmodel,
         artifact_path='model',
-        registered_model_name='intel_scenes_train_resnet50_lr'
+        registered_model_name='intel_scenes_train_resnet50'
     )
 
     mlflow.end_run()

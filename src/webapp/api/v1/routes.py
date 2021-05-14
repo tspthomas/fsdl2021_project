@@ -21,7 +21,7 @@ from werkzeug.datastructures import FileStorage
 
 from constants import FEEDBACK_FOLDER
 from constants import INTELSCENES_FOLDER
-from constants import INTELSCENES_RESNET50_LR_MODEL
+from constants import INTELSCENES_RESNET50_MODEL
 
 from fsdl_lib import feature_extraction as fe
 
@@ -36,15 +36,15 @@ def get_resnet50():
     return g.resnet50
 
 
-def get_lr_intelscenes():
+def get_intelscenes_model():
     stage = 'Production'
 
-    if 'lr_intelscenes' not in g:
-        g.lr_intelscenes = mlflow.pyfunc.load_model(
-            model_uri=f"models:/{INTELSCENES_RESNET50_LR_MODEL}/{stage}"
+    if 'intelscenes_model' not in g:
+        g.intelscenes_model = mlflow.pyfunc.load_model(
+            model_uri=f"models:/{INTELSCENES_RESNET50_MODEL}/{stage}"
         )
 
-    return g.lr_intelscenes
+    return g.intelscenes_model
 
 
 @api_blueprint.route('/intelscenes/', methods=['POST'])
@@ -67,8 +67,8 @@ def intelscenes():
         logging.info(features.shape)
 
         # classify
-        lr = get_lr_intelscenes()
-        prediction = lr.predict(features.detach().numpy())
+        model = get_intelscenes_model()
+        prediction = model.predict(features.detach().numpy())
         prediction_class = fe.int2cat[int(prediction)]
         logging.info(prediction_class)
 

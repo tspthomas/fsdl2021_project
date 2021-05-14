@@ -107,6 +107,7 @@ def train_test(**kwargs):
     mlflow.log_param('train_features_hash', task_instance_data[1])
     mlflow.log_param('test_features_hash', task_instance_data[2])
     mlflow.log_param('features', kwargs['features'])
+    mlflow.log_param('dag_type', 'parallel')
 
     y_pred = model.predict(X_test)
     mlflow.log_metric('test_accuracy_score',
@@ -146,7 +147,7 @@ def register_best_model(**kwargs):
     mlflow.sklearn.log_model(
         sk_model=best_model,
         artifact_path='model',
-        registered_model_name='intel_scenes_train_resnet50_parallel'
+        registered_model_name='intel_scenes_train_resnet50'
     )
 
     mlflow.end_run()
