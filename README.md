@@ -2,6 +2,12 @@
 
 ## Setup
 
+### Download the Dataset
+
+The full dataset is hosted by Kaggle, found [here](https://www.kaggle.com/puneet6060/intel-image-classification).
+
+The reduced dataset used in our project is found [here](https://drive.google.com/drive/folders/1PACy3ENNqSz0LfhNbg9qyY6GIZxN2uIp?usp=sharing)
+
 ### Creating environment variables
 
 Create a file called .env containing the environment variables for all services.
